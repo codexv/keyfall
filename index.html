@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KEYFALL // Tactical Orbital Typing Shooter & WPM Assessment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Background & Gameplay Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Top Tactical HUD -->
+    <header id="hud" class="hidden">
+      <div class="hud-group">
+        <div class="hud-stat">
+          <span class="hud-label" id="hud-mode-label">WAVE</span>
+          <span class="hud-value accent-cyan" id="hud-wave">01</span>
+        </div>
+        <div class="hud-stat">
+          <span class="hud-label">NET WPM</span>
+          <span class="hud-value accent-gold" id="hud-wpm">0</span>
+        </div>
+        <div class="hud-stat">
+          <span class="hud-label">ACCURACY</span>
+          <span class="hud-value" id="hud-acc">100%</span>
+        </div>
+        <div class="hud-stat">
+          <span class="hud-label">COMBO</span>
+          <span class="hud-value accent-magenta" id="hud-combo">0x</span>
+        </div>
+        <div class="hud-stat">
+          <span class="hud-label">SCORE</span>
+          <span class="hud-value" id="hud-score">0</span>
+        </div>
+      </div>
+
+      <div class="hud-center">
+        <div class="shield-box">
+          <span class="hud-label">HULL SHIELDS</span>
+          <div class="shield-pips" id="hud-shields">
+            <span class="pip active"></span>
+            <span class="pip active"></span>
+            <span class="pip active"></span>
+          </div>
+        </div>
+        <div class="emp-box" id="emp-trigger-btn" title="Press SPACE or ENTER to detonate EMP">
+          <span class="hud-label">EMP SHOCKWAVE <kbd>SPACE</kbd></span>
+          <div class="emp-pips" id="hud-emp">
+            <span class="emp-pip active"></span>
+            <span class="emp-pip"></span>
+            <span class="emp-pip"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-controls">
+        <div class="target-hint">
+          <span><kbd>BKSP</kbd> UNLOCK</span>
+          <span><kbd>TAB</kbd> SWITCH</span>
+        </div>
+        <button id="btn-finish-assess" class="hud-btn hud-btn-assess" title="End run now and view WPM Assessment">
+          ASSESS WPM
+        </button>
+        <button id="btn-mute" class="hud-btn" title="Toggle Audio">
+          SFX: ON
+        </button>
+      </div>
+    </header>
+
+    <!--Locked Target Bottom Status Bar -->
+    <div id="target-bar" class="hidden">
+      <div class="target-readout">
+        <span class="target-tag">LOCKED TARGET //</span>
+        <span id="locked-word-display">NO TARGET LOCKED — TYPE ANY INITIAL LETTER</span>
+      </div>
+    </div>
+
+    <!-- Start / Mode Selection Overlay -->
+    <section id="start-screen" class="overlay-screen">
+      <div class="panel start-panel">
+        <div class="brand-header">
+          <div class="badge-pill">ORBITAL DEFENSE &amp; TELEMETRY SYSTEM</div>
+          <h1 class="game-title">KEY<span>FALL</span></h1>
+          <p class="game-subtitle">NEXT-GEN TACTICAL TYPING SHOOTER &amp; WPM DIAGNOSTIC</p>
+        </div>
+
+        <div class="section-label">SELECT MISSION PROTOCOL</div>
+        <div class="mode-grid">
+          <button class="mode-card selected" data-mode="survival">
+            <div class="mode-tag">ENDLESS ESCALATION</div>
+            <div class="mode-name">WAVE SURVIVAL</div>
+            <p class="mode-desc">Classic Z-Type escalation upgraded with Splitter Cruisers, Dreadnought Bosses, and full post-mission WPM Assessment.</p>
+          </button>
+          <button class="mode-card" data-mode="timed60">
+            <div class="mode-tag">60-SECOND BENCHMARK</div>
+            <div class="mode-name">60S WPM BLITZ</div>
+            <p class="mode-desc">Adaptive 60-second combat sprint. Continuous dynamic waves scale to your real-time WPM for a pure speed &amp; accuracy test.</p>
+          </button>
+          <button class="mode-card" data-mode="timed120">
+            <div class="mode-tag">120-SECOND BENCHMARK</div>
+            <div class="mode-name">120S ENDURANCE</div>
+            <p class="mode-desc">Sustained 2-minute orbital defense benchmark measuring stamina, consistency, and weak-key telemetry under pressure.</p>
+          </button>
+        </div>
+
+        <div class="difficulty-row">
+          <span class="section-label">THREAT VELOCITY:</span>
+          <div class="diff-buttons">
+            <button class="diff-btn" data-diff="cadet">CADET (0.8x)</button>
+            <button class="diff-btn active" data-diff="vanguard">VANGUARD (1.0x)</button>
+            <button class="diff-btn" data-diff="overdrive">OVERDRIVE (1.35x)</button>
+          </div>
+        </div>
+
+        <div class="intel-grid">
+          <div class="intel-item">
+            <span class="intel-title accent-cyan">SCOUT &amp; INTERCEPTOR</span>
+            <span class="intel-text">3–7 letter strike craft. Fast approach vectors.</span>
+          </div>
+          <div class="intel-item">
+            <span class="intel-title accent-gold">SPLITTER CRUISER</span>
+            <span class="intel-text">8–10 letter heavy hull. Splits into 2 fast shards on destruction.</span>
+          </div>
+          <div class="intel-item">
+            <span class="intel-title accent-magenta">DREADNOUGHT BOSS</span>
+            <span class="intel-text">Multi-word phase shields &amp; seeker missiles.</span>
+          </div>
+          <div class="intel-item">
+            <span class="intel-title accent-green">TACTICAL UPGRADES</span>
+            <span class="intel-text"><kbd>BKSP</kbd> unlock word · <kbd>TAB</kbd> cycle target · <kbd>SPACE</kbd> EMP</span>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="btn-launch" class="primary-btn">
+            LAUNCH INTERCEPTOR <span class="btn-sub">[PRESS ENTER]</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Post-Game WPM Assessment Screen -->
+    <section id="assessment-screen" class="overlay-screen hidden">
+      <div class="panel assessment-panel">
+        <div class="assess-header">
+          <div>
+            <div class="badge-pill" id="assess-status-pill">MISSION TELEMETRY REPORT</div>
+            <h2 class="assess-title">WPM ASSESSMENT</h2>
+            <p class="assess-sub" id="assess-summary-line">WAVE SURVIVAL // VANGUARD PROTOCOL</p>
+          </div>
+          <div class="rank-box">
+            <span class="rank-label">PILOT RATING</span>
+            <div class="rank-grade" id="assess-rank">S</div>
+            <span class="rank-title" id="assess-rank-title">HYPERDRIVE ACE</span>
+          </div>
+        </div>
+
+        <!-- Primary WPM Metrics -->
+        <div class="kpi-grid">
+          <div class="kpi-card primary-kpi">
+            <span class="kpi-label">NET WPM (ACCURACY-ADJUSTED)</span>
+            <div class="kpi-value accent-gold" id="stat-net-wpm">0</div>
+            <span class="kpi-sub" id="stat-wpm-percentile">Active Combat Cadence</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">RAW WPM</span>
+            <div class="kpi-value accent-cyan" id="stat-raw-wpm">0</div>
+            <span class="kpi-sub" id="stat-cpm">0 CPM</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">ACCURACY</span>
+            <div class="kpi-value accent-green" id="stat-accuracy">100%</div>
+            <span class="kpi-sub" id="stat-keystrokes">0 / 0 Keystrokes</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">PEAK BURST WPM</span>
+            <div class="kpi-value accent-magenta" id="stat-peak-wpm">0</div>
+            <span class="kpi-sub" id="stat-max-combo">0x Max Streak</span>
+          </div>
+        </div>
+
+        <!-- WPM Over Time Chart + Telemetry Breakdown -->
+        <div class="telemetry-split">
+          <div class="chart-card">
+            <div class="card-header">
+              <span>WPM CADENCE &amp; ACCURACY TIMELINE</span>
+              <div class="chart-legend">
+                <span class="legend-dot gold"></span> NET WPM
+                <span class="legend-dot cyan"></span> RAW WPM
+                <span class="legend-dot red"></span> MISFIRE
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="wpm-chart" width="540" height="190"></canvas>
+            </div>
+          </div>
+
+          <div class="diagnostics-card">
+            <div class="card-header">
+              <span>WEAK-KEY DIAGNOSTICS &amp; COMBAT STATS</span>
+            </div>
+            <div class="weak-keys-section">
+              <div class="sub-label">MOST MISSED KEYS</div>
+              <div id="weak-keys-list" class="weak-keys-list">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+            <div class="combat-mini-grid">
+              <div class="mini-stat">
+                <span class="mini-label">HOSTILES DESTROYED</span>
+                <span class="mini-val" id="stat-kills">0</span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">WAVE / TIME</span>
+                <span class="mini-val" id="stat-duration">00:00</span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">FASTEST WORD</span>
+                <span class="mini-val accent-cyan" id="stat-fastest-word">—</span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">FINAL SCORE</span>
+                <span class="mini-val accent-gold" id="stat-final-score">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-row assess-actions">
+          <button id="btn-retry" class="primary-btn">
+            DEPLOY AGAIN <span class="btn-sub">[PRESS ENTER]</span>
+          </button>
+          <button id="btn-menu" class="secondary-btn">
+            MISSION SELECT
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
