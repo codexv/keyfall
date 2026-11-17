@@ -6,6 +6,7 @@
   const ctx = canvas.getContext("2d");
 
   // Header & Nav
+  const brandLink = document.getElementById("brandLink");
   const navTabs = document.querySelectorAll(".nav-tab[data-tab]");
   const openStatsBtn = document.getElementById("openStatsBtn");
   const closeStatsBtn = document.getElementById("closeStatsBtn");
@@ -20,8 +21,6 @@
   const heroEyebrow = document.getElementById("heroEyebrow");
   const heroTitle = document.getElementById("heroTitle");
   const heroSubtitle = document.getElementById("heroSubtitle");
-  const sysProtocolLabel = document.getElementById("sysProtocolLabel");
-  const sysQuote = document.getElementById("sysQuote");
   const sysStatusText = document.getElementById("sysStatusText");
 
   // Sidebar Decks
@@ -59,6 +58,7 @@
   const hudCombo = document.getElementById("hudCombo");
   const hudTimeLabel = document.getElementById("hudTimeLabel");
   const hudTime = document.getElementById("hudTime");
+  const hudTimeUnit = document.getElementById("hudTimeUnit");
 
   const mpTelemetryBar = document.getElementById("mpTelemetryBar");
   const mpSelfName = document.getElementById("mpSelfName");
@@ -72,6 +72,7 @@
   const welcomeTitle = document.getElementById("welcomeTitle");
   const welcomeDesc = document.getElementById("welcomeDesc");
   const letsFlyBtn = document.getElementById("letsFlyBtn");
+  const reticleBox = welcomeOverlay.querySelector(".reticle-box");
 
   const keyboardDock = document.getElementById("keyboardDock");
   const kbCoachPrompt = document.getElementById("kbCoachPrompt");
@@ -101,8 +102,11 @@
   const resCoaching = document.getElementById("resCoaching");
   const wpmChart = document.getElementById("wpmChart");
   const retryBtn = document.getElementById("retryBtn");
+  const backToControlBtn = document.getElementById("backToControlBtn");
   const trainWeakBtn = document.getElementById("trainWeakBtn");
   const shareChallengeBtn = document.getElementById("shareChallengeBtn");
+
+  const DRILL_TARGET_WORDS = 20;
 
   // Persistent Storage Helper
   const STORAGE_KEY = "keyfall_v2_profile";
@@ -177,7 +181,34 @@
     p: { zone: "pinky", label: "RIGHT PINKY" },
   };
 
-  // Home-row & Alternating-hand curated word lists for Training Lab
+  const DRILL_INFO = {
+    homerow: {
+      title: "01 · Home Row Foundation",
+      keys: "A S D F G H J K L",
+      coach: "Home-row anchor & return",
+      desc: "Anchor your index fingers on F and J. Clear 20 home-row target words while keeping your wrists steady.",
+    },
+    topbottom: {
+      title: "02 · Full Reach & Verticals",
+      keys: "Q W E R T Y + Z X C V",
+      coach: "Vertical reach accuracy",
+      desc: "Practice clean vertical reaches to the top and bottom rows, returning fingers to the home row after each strike.",
+    },
+    burst: {
+      title: "03 · High-Velocity Alternation",
+      keys: "ALTERNATING HANDS",
+      coach: "High-velocity bigrams",
+      desc: "Build raw burst WPM with words engineered to alternate rapidly between your left and right hands.",
+    },
+    weakkeys: {
+      title: "04 · Adaptive Weak-Key Clinic",
+      keys: "PERSONAL MISSED KEYS",
+      coach: "Adaptive error elimination",
+      desc: "Dynamically generates target words containing the exact letters you've missed most across your flights.",
+    },
+  };
+
+  // Curated Training Word Lists
   const HOME_ROW_WORDS = [
     "add", "all", "ask", "dad", "fad", "fall", "flask", "glad", "half", "hall",
     "had", "has", "jag", "jak", "lad", "lass", "sad", "salad", "sash", "shall",
@@ -185,60 +216,41 @@
   ];
 
   const ALTERNATING_WORDS = [
-    "aid", "air", "also", "ant", "apron", "auger", "authentic", "auto", "big", "Blame",
+    "aid", "air", "also", "ant", "apron", "auger", "authentic", "auto", "big", "blame",
     "bog", "both", "burn", "chair", "chapel", "city", "clan", "clay", "coal", "coat",
     "cod", "cog", "colt", "coma", "comb", "coral", "cork", "corn", "cot", "cue",
-    "cut", "dame", "idiot", "island", "ivory", "jar", "jaundice", "jay", "kei", "kept",
-    "key", "laity", "lake", "lamb", "lame", "land", "lane", "lantana", "lap", "lapel",
-    "larva", "larch", "lash", "latch", "late", "laugh", "lay", "leapt", "lend", "lens",
-    "lent", "light", "lint", "load", "loan", "lock", "mane", "map", "maple", "marl",
-    "mate", "may", "meant", "end", "men", "mend", "mental", "mock", "name", "nap",
-    "nape", "navy", "neighbor", "oak", "oar", "oat", "oddball", "offal", "oil", "omen",
-    "oral", "orient", "ornament", "own", "oxen", "paid", "pail", "pain", "paint", "pair",
-    "pale", "palm", "pan", "pane", "panel", "pang", "pant", "papal", "par", "pay",
+    "cut", "dame", "island", "ivory", "jar", "jay", "kept", "key", "lake", "lamb",
+    "lame", "land", "lane", "lap", "lapel", "larva", "larch", "lash", "latch", "late",
+    "laugh", "lay", "leapt", "lend", "lens", "lent", "light", "lint", "load", "loan",
+    "lock", "mane", "map", "maple", "marl", "mate", "may", "meant", "mend", "mental",
+    "mock", "name", "nap", "nape", "navy", "neighbor", "oak", "oar", "oat", "oil",
+    "omen", "oral", "orient", "ornament", "own", "oxen", "paid", "pail", "pain", "paint",
+    "pair", "pale", "palm", "pan", "pane", "panel", "pang", "pant", "par", "pay",
     "pelican", "pen", "penal", "pendant", "pens", "pent", "pet", "pity", "plan", "plane",
-    "planet", "plank", "plant", "plaza", "pm", "poem", "poet", "pro", "prof", "profit",
-    "prop", "quantity", " quench", "right", "risk", "ritual", "roam", "roar", "oat", "ock",
-    "rod", "roe", "romp", "rope", "rot", "rough", "royalty", "rub", "rude", "rug",
-    "ruin", "rule", "rum", "run", "ung", "rush", "rust", "rut", "sake", "sale",
-    "salt", "same", "sand", "sane", "sang", "sank", "sap", "ash", "sat", "aucer",
-    "save", "saw", "say", "seal", "seam", "seat", "sect", "senate", "send", "sent",
-    "set", "shack", "shady", "shaft", "shake", "shale", "sham", "shame", "shank", "shape",
-    "shard", "share", "shark", "sharp", "shave", "shawl", "sheaf", "shear", "shed", "ac",
-    "shell", "shift", "shin", "shine", "ship", "irk", "shirt", "shoal", "shock", "shoe",
-    "shone", "shook", "shoot", "shop", "shore", "short", "shot", "shove", "shovel", "show",
-    "shown", "shrank", "shred", "shrew", "shriek", "hrift", "shrike", "shrill", "shrimp",
-    "shrine", "shrink", "shroud", "shrub", "shrug", "shrunk", "shuck", "shudder", "shuffle",
-    "shun", "shunt", "shut", "shy", "ial", "sick", "side", "sift", "sigh", "sight",
-    "sign", "signal", "silk", "sill", "silo", "silt", "silver", "simmer", "simple", "sin",
-    "since", "sinew", "sing", "single", "sink", "sip", "siren", "sit", "site", "six",
-    "size", "skate", "skein", "sketch", "skew", "ski", "skid", "skiff", "skill", "skim",
-    "skin", "skip", "skirt", "skit", "skulk", "skull", "skunk", "sky", "slab", "slack",
-    "slag", "slain", "slake", "slam", "slander", "slang", "slant", "slap", "slash", "slat",
-    "slate", "slave", "slay", "sled", "sleek", "sleep", "sleet", "sleeve", "sleigh", "slept",
-    "slew", "slice", "slick", "slid", "slide", "slight", "slim", "slime", "sling", "slink",
-    "slip", "slit", "slither", "sliver", "slob", "sloe", "slog", "sloop", "slope", "slop",
-    "slosh", "slot", "sloth", "slouch", "slough", "slow", "sludge", "slug", "sluice", "slum",
-    "slumber", "slump", "slung", "slunk", "slur", "slush", "sly", "smack", "small", "smart",
-    "smash", "smear", "smell", "smelt", "smile", "smirk", "smite", "smith", "smock", "smoke",
-    "smolder", "smooth", "smother", "smudge", "smug", "smuggle", "smut", "snack", "snafu",
-    "snag", "snail", "snake", "snap", "snare", "snarl", "snatch", "sneak", "sneer", "sneeze",
-    "snicker", "snide", "sniff", "snip", "snipe", "ubit", "snob", "snooze", "snore", "snorkel",
-    "snort", "snout", "snow", "snub", "snuff", "snug", "soak", "soap", "soar", "sob",
-    "sober", "soccer", "social", "sock", "socket", "sod", "soda", "sofa", "soft", "soggy",
-    "soil", "solace", "solar", "sold", "solder", "soldier", "sole", "solemn", "solid", "solo",
-    "solve", "somber", "some", "son", "sonar", "song", "sonic", "sonnet", "soon", "soot",
-    "soothe", "sop", "soprano", "sorcery", "sordid", "sore", "sorrow", "sorry", "sort", "soul",
-    "sound", "soup", "sour", "source", "south", "sow", "soy", "space", "spade", "span",
-    "spank", "spar", "spare", "spark", "sparrow", "sparse", "spasm", "spat", "spate", "spatial",
-    "spawn", "spay", "speak", "spear", "spec", "special", "species", "speck", "specter", "speech",
-    "speed", "spell", "spend", "spent", "sperm", "spew", "sphere", "sphinx", "spice", "spider",
-    "spied", "spiel", "spigot", "spike", "spill", "spin", "spinach", "spindle", "spine", "spiral",
-    "spire", "spirit", "spit", "spite", "spittle", "splash", "splat", "splay", "spleen", "splendid",
-    "splice", "splint", "splinter", "split", "splotch", "splurge", "spoil", "spoke", "spoken", "sponge",
-    "sponsor", "spoof", "spook", "spool", "spoon", "spoor", "spore", "sport", "spot", "spouse",
-    "spout", "sprain", "zeal", "zero", "zest", "zinc", "zone", "zoom"
-  ].map(w => w.trim().toLowerCase()).filter(w => /^[a-z]{3,8}$/.test(w));
+    "planet", "plank", "plant", "plaza", "poem", "poet", "pro", "profit", "prop", "quench",
+    "right", "risk", "ritual", "roam", "roar", "rock", "rod", "romp", "rope", "rough",
+    "royalty", "rub", "rude", "rug", "ruin", "rule", "rum", "run", "rush", "rust",
+    "sake", "sale", "salt", "same", "sand", "sane", "sang", "sank", "save", "seal",
+    "seam", "seat", "sect", "senate", "send", "sent", "shack", "shady", "shaft", "shake",
+    "shale", "shame", "shank", "shape", "shard", "share", "shark", "sharp", "shave", "shawl",
+    "sheaf", "shear", "shed", "shell", "shift", "shin", "shine", "ship", "shirt", "shoal",
+    "shock", "shoe", "shone", "shook", "shoot", "shop", "shore", "short", "shot", "shovel",
+    "show", "shown", "shred", "shrew", "shriek", "shrill", "shrimp", "shrine", "shrink", "shroud",
+    "shrub", "shrug", "shudder", "shuffle", "shunt", "shut", "sick", "side", "sift", "sigh",
+    "sight", "sign", "signal", "silk", "sill", "silo", "silt", "silver", "simple", "since",
+    "sinew", "sing", "single", "sink", "siren", "site", "size", "skate", "sketch", "skid",
+    "skiff", "skill", "skim", "skin", "skip", "skirt", "skull", "slab", "slack", "slam",
+    "slander", "slang", "slant", "slap", "slash", "slate", "sleek", "sleep", "sleet", "sleeve",
+    "slender", "slice", "slick", "slide", "slight", "slim", "sling", "slip", "slither", "sliver",
+    "slogan", "slope", "slouch", "slow", "slumber", "slump", "smack", "small", "smart", "smash",
+    "smear", "smell", "smile", "smirk", "smith", "smoke", "smooth", "snack", "snail", "snake",
+    "snap", "snare", "snarl", "snatch", "sneak", "sniff", "snipe", "solar", "solder", "soldier",
+    "solemn", "solid", "solve", "sonar", "song", "sonic", "soon", "soothe", "sorrow", "sound",
+    "source", "south", "space", "spade", "span", "spark", "sparrow", "sparse", "spatial", "spawn",
+    "speak", "spear", "special", "species", "speck", "speech", "speed", "spell", "spend", "sphere",
+    "spice", "spider", "spike", "spill", "spin", "spine", "spiral", "spirit", "splash", "split",
+    "spoil", "spoke", "sponge", "sponsor", "spool", "spoon", "spore", "sport", "spot", "spout"
+  ];
 
   // Game & UI State
   const state = {
@@ -252,6 +264,7 @@
     keyboardGuideOn: true,
     socialMode: "duel", // 'duel' | 'coop'
     partnerType: "p2p", // 'p2p' | 'bot'
+    selectedFriend: null, // { name, bestWpm, status } when challenging a roster friend
 
     // Challenge Seed/Target (from URL ?challenge=...)
     challengeTargetWpm: 0,
@@ -267,7 +280,6 @@
     timeRemaining: 60,
     elapsedFlightSec: 0,
     spawnTimer: 0,
-    spawnInterval: 1.4,
 
     // Entities
     enemies: [],
@@ -375,7 +387,6 @@
     if (locked && locked.typedIndex < locked.word.length) {
       nextChar = locked.word[locked.typedIndex];
     } else if (state.enemies.length > 0) {
-      // Suggest closest threat's initial letter
       const closest = [...state.enemies].sort((a, b) => b.y - a.y)[0];
       if (closest) nextChar = closest.word[closest.typedIndex || 0];
     }
@@ -386,44 +397,118 @@
       const meta = FINGER_MAP[nextChar];
       kbCoachPrompt.textContent = `NEXT KEY: [${nextChar.toUpperCase()}] — USE ${meta.label}`;
     } else {
-      kbCoachPrompt.textContent = "AWAITING TARGET — KEEP FINGERS ON [ASDF] [JKL;]";
+      kbCoachPrompt.textContent = "HOME ROW READY — ANCHOR FINGERS ON [ASDF] [JKL;]";
     }
   }
 
-  // Render Squadron Friend Roster
+  // Render Interactive Squadron Friend Roster
   function renderSquadRoster() {
     squadRosterList.innerHTML = "";
     profile.friends.forEach((f) => {
       const row = document.createElement("div");
       row.className = "roster-item";
+      const isSelected = state.selectedFriend && state.selectedFriend.name === f.name;
+      const actionLabel =
+        state.socialMode === "coop"
+          ? isSelected
+            ? "WINGMAN ✓"
+            : "FLY CO-OP ↗"
+          : isSelected
+          ? "RIVAL ✓"
+          : "DUEL ↗";
+
       row.innerHTML = `
         <div>
           <span class="dot-online"></span>
           <strong>${f.name}</strong>
+          <span class="roster-meta">&nbsp;${f.bestWpm} WPM</span>
         </div>
-        <span class="roster-meta">${f.bestWpm} WPM · ${f.status}</span>
+        <button type="button" class="roster-challenge-btn">${actionLabel}</button>
       `;
+      row.querySelector("button").addEventListener("click", () => {
+        state.selectedFriend = f;
+        state.partnerType = "bot";
+        document
+          .querySelectorAll("#partnerTypeGroup .seg-btn")
+          .forEach((b) => b.classList.toggle("active", b.dataset.partner === "bot"));
+        resetToStandby();
+      });
       squadRosterList.appendChild(row);
     });
   }
-  renderSquadRoster();
 
-  // Update Left Sidebar & Header Info when switching Tabs/Modes
+  function getActivePartnerName() {
+    if (state.peerConnected) return state.peerCallsign;
+    if (state.selectedFriend) return `${state.selectedFriend.name} (${state.selectedFriend.bestWpm} WPM)`;
+    return `AI-${state.difficulty.toUpperCase()}`;
+  }
+
+  function getActiveBotTargetWpm() {
+    if (state.selectedFriend && state.selectedFriend.bestWpm) {
+      return state.selectedFriend.bestWpm;
+    }
+    return state.difficulty === "cadet" ? 42 : state.difficulty === "pilot" ? 64 : 88;
+  }
+
+  // Cleanly Reset Arena to Standby State when switching tabs, modes, or returning to Mission Control
+  function resetToStandby() {
+    state.phase = "standby";
+    state.enemies = [];
+    state.projectiles = [];
+    state.particles = [];
+    state.shockwaves = [];
+    state.floatingTexts = [];
+    state.lockedEnemyId = null;
+    state.combo = 0;
+    state.wordsCleared = 0;
+    state.correctKeys = 0;
+    state.totalKeys = 0;
+    state.errorKeys = 0;
+    state.shields = 3;
+    state.empCharges = 2;
+
+    pauseOverlay.classList.add("hidden");
+    resultsOverlay.classList.add("hidden");
+    welcomeOverlay.classList.remove("hidden");
+
+    arenaStatus.textContent = "SECTOR 01 / STANDBY";
+    lockLabel.textContent = "TARGETING SYSTEM";
+    typedReadout.innerHTML = `AWAITING INPUT<span class="cursor">_</span>`;
+
+    state.wingman.active =
+      state.activeTab === "social" && state.socialMode === "coop";
+
+    syncUIState();
+    updateHudDisplay();
+  }
+
+  // Synchronize Sidebar, Welcome Screen, CTA Button Labels & HUD for Active Tab/Mode
   function syncUIState() {
     deckArena.classList.toggle("hidden", state.activeTab !== "arena");
     deckTraining.classList.toggle("hidden", state.activeTab !== "training");
     deckSocial.classList.toggle("hidden", state.activeTab !== "social");
 
+    const isRunning = state.phase === "playing" || state.phase === "paused";
     const showKb =
       state.activeTab === "training" &&
       state.keyboardGuideOn &&
       (state.phase === "playing" || state.phase === "standby");
     keyboardDock.classList.toggle("hidden", !showKb);
 
+    // Keep Welcome screen compact when Keyboard Dock is shown below it in Training standby
+    if (reticleBox) {
+      reticleBox.classList.toggle("hidden", showKb && state.phase === "standby");
+    }
+
     const showMpBar =
       state.activeTab === "social" &&
-      (state.phase === "playing" || state.peerConnected);
+      (state.phase === "playing" || state.peerConnected || state.selectedFriend !== null);
     mpTelemetryBar.classList.toggle("hidden", !showMpBar);
+
+    const weakList = Object.entries(profile.weakKeys)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([k]) => k.toUpperCase());
 
     if (state.activeTab === "arena") {
       heroEyebrow.textContent = "THE KEYBOARD IS YOUR WEAPON";
@@ -442,57 +527,118 @@
       infoObjective.textContent = isAssess
         ? "Measure your speed"
         : "Survive the incoming";
+
       hudTimeLabel.textContent = isAssess ? "TIME LEFT" : "FLIGHT TIME";
-      if (state.phase === "standby") {
-        hudTime.textContent = isAssess ? "60" : "0";
+      hudTimeUnit.textContent = "s";
+
+      launchBtnText.textContent = isRunning ? "RESTART SESSION" : "LAUNCH SESSION";
+      sidebarTipText.textContent =
+        "Clean keystrokes build bigger combos and charge your EMP shockwave.";
+
+      if (state.challengeTargetWpm > 0) {
+        welcomeEyebrow.textContent = `INCOMING DUEL CHALLENGE // ${state.challengeChallenger}`;
+        welcomeTitle.textContent = `Beat ${state.challengeTargetWpm} WPM in the Arena.`;
+        welcomeDesc.textContent =
+          "Launch a 60-second WPM Assessment flight to beat your colleague's benchmark.";
+      } else {
+        welcomeEyebrow.textContent = "FOCUS. TYPE. OBLITERATE.";
+        welcomeTitle.textContent = isAssess
+          ? "Enter your flow state."
+          : "Hold the orbital line.";
+        welcomeDesc.innerHTML = isAssess
+          ? "60-second baseline sprint. Type incoming words to measure your true WPM and weak-key telemetry."
+          : "Endless orbital survival. Protect your 3 hull shields against Scouts, Splitter Cruisers, and Dreadnought Bosses.";
       }
+      letsFlyBtn.innerHTML = `LET’S FLY <span>↗</span>`;
     } else if (state.activeTab === "training") {
       heroEyebrow.textContent = "ORBITAL TYPING ACADEMY";
       heroTitle.innerHTML = `Build muscle<br /><span class="lime-text">memory.</span>`;
       heroSubtitle.textContent =
         "Interactive finger-zone coaching, rhythm drills, and personalized weak-key clinics.";
       simModeTitle.textContent = "TRAINING SIMULATION";
-      hudTimeLabel.textContent = "DRILL TIME";
 
-      const weakList = Object.entries(profile.weakKeys)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([k]) => k.toUpperCase());
       weakKeyDrillSub.textContent =
         weakList.length > 0
-          ? `Focuses on your missed keys: ${weakList.join(", ")}`
+          ? `Targets your missed keys: ${weakList.join(", ")}`
           : "Targets your personal missed keys.";
 
-      if (state.trainingDrill === "homerow") {
-        infoDrillKeys.textContent = "A S D F G H J K L";
-        infoDrillCoach.textContent = "Home-row anchor & return";
-      } else if (state.trainingDrill === "topbottom") {
-        infoDrillKeys.textContent = "Q W E R T Y + Z X C V";
-        infoDrillCoach.textContent = "Vertical reach accuracy";
-      } else if (state.trainingDrill === "burst") {
-        infoDrillKeys.textContent = "ALTERNATING HANDS";
-        infoDrillCoach.textContent = "High-velocity bigrams";
-      } else {
-        infoDrillKeys.textContent =
-          weakList.length > 0 ? weakList.join(" · ") : "ALL KEYS (CALIBRATING)";
-        infoDrillCoach.textContent = "Adaptive error elimination";
-      }
+      const meta = DRILL_INFO[state.trainingDrill] || DRILL_INFO.homerow;
+      infoDrillKeys.textContent =
+        state.trainingDrill === "weakkeys"
+          ? weakList.length > 0
+            ? weakList.join(" · ")
+            : "ALL KEYS (CALIBRATING)"
+          : meta.keys;
+      infoDrillCoach.textContent = meta.coach;
+
+      hudTimeLabel.textContent = "WORDS LEFT";
+      hudTimeUnit.textContent = "w";
+
+      launchBtnText.textContent = isRunning ? "RESTART DRILL" : "START DRILL";
+      sidebarTipText.textContent =
+        "Watch the highlighted key on the finger-map below—return your index fingers to F and J.";
+
+      welcomeEyebrow.textContent = "02 // ORBITAL TYPING ACADEMY";
+      welcomeTitle.textContent = meta.title;
+      welcomeDesc.textContent = meta.desc;
+      letsFlyBtn.innerHTML = `START 20-WORD DRILL <span>↗</span>`;
     } else if (state.activeTab === "social") {
       heroEyebrow.textContent = "SQUADRON MULTIPLAYER NETWORK";
       heroTitle.innerHTML = `Duel rivals.<br />Defend <span class="lime-text">together.</span>`;
       heroSubtitle.textContent =
-        "Real-time WebRTC P2P room codes & AI simulators for 1v1 Duels and 2-Player Co-op.";
+        "Real-time WebRTC P2P room codes, friend roster duels, and 2-Player Co-op missions.";
       simModeTitle.textContent =
         state.socialMode === "duel" ? "1V1 DUEL ARENA" : "2P CO-OP SECTOR";
+
       hudTimeLabel.textContent =
-        state.socialMode === "duel" ? "DUEL TIMER" : "SECTOR WAVE";
+        state.socialMode === "duel" ? "DUEL TIMER" : "FLIGHT TIME";
+      hudTimeUnit.textContent = "s";
+
       mpModeBadge.textContent =
         state.socialMode === "duel" ? "1V1 JAMMER DUEL" : "2P CO-OP DEFENSE";
       mpSelfName.textContent = profile.callsign;
-      mpPeerName.textContent = state.peerConnected
-        ? state.peerCallsign
-        : `AI-${state.difficulty.toUpperCase()}`;
+      mpPeerName.textContent = getActivePartnerName();
       p2pRoomBox.classList.toggle("hidden", state.partnerType === "bot");
+
+      const actionName =
+        state.socialMode === "duel" ? "1V1 DUEL" : "CO-OP MISSION";
+      launchBtnText.textContent = isRunning
+        ? `RESTART ${actionName}`
+        : `LAUNCH ${actionName}`;
+      sidebarTipText.textContent =
+        state.socialMode === "duel"
+          ? "Every 3 words you clear launches a high-speed Jammer drone into your rival's sector."
+          : "In 2P Co-op, your wingman fires alongside you and shares hull shield integrity.";
+
+      if (state.partnerType === "p2p" && !state.peerConnected) {
+        welcomeEyebrow.textContent = "03 // LIVE P2P SQUADRON LOBBY";
+        if (state.roomCode) {
+          welcomeTitle.textContent = `Room ${state.roomCode} Open — Waiting for Peer`;
+          welcomeDesc.textContent = `Send code ${state.roomCode} (or click COPY LINK in the sidebar) to a colleague, or click below to launch immediately with an AI pilot.`;
+          letsFlyBtn.innerHTML = `FLY WITH AI PILOT NOW <span>↗</span>`;
+        } else {
+          welcomeTitle.textContent =
+            state.socialMode === "duel"
+              ? "1v1 Jammer Duel Lobby"
+              : "2P Co-op Defense Lobby";
+          welcomeDesc.textContent =
+            "Click HOST ROOM in the sidebar to invite a colleague via P2P room code, pick a friend from your Squadron Roster, or launch now.";
+          letsFlyBtn.innerHTML = `LAUNCH ${actionName} <span>↗</span>`;
+        }
+      } else {
+        welcomeEyebrow.textContent = `SQUADRON READY // ${
+          state.socialMode === "duel" ? "1V1 JAMMER DUEL" : "2P CO-OP DEFENSE"
+        }`;
+        welcomeTitle.textContent = `${profile.callsign} ${
+          state.socialMode === "duel" ? "vs" : "+"
+        } ${getActivePartnerName()}`;
+        welcomeDesc.textContent =
+          state.socialMode === "duel"
+            ? "60-second head-to-head WPM duel. Every 3 words you clear sends a Jammer drone to your rival's arena."
+            : "Dual-interceptor formation with shared hull shields. Clear incoming waves and Dreadnought Bosses together.";
+        letsFlyBtn.innerHTML = `ENGAGE ${actionName} <span>↗</span>`;
+      }
+      renderSquadRoster();
     }
 
     updateKeyboardHighlight();
@@ -531,7 +677,6 @@
         pool = [...window.WORD_BANKS.short, ...window.WORD_BANKS.medium];
       }
     } else {
-      // Solo Arena or Social
       if (state.difficulty === "cadet") {
         pool = window.WORD_BANKS.short;
       } else if (state.difficulty === "pilot") {
@@ -571,11 +716,11 @@
       const hasBoss = state.enemies.some((e) => e.type === "boss");
       const r = Math.random();
       if (!hasBoss && state.wordsCleared > 0 && state.wordsCleared % 10 === 0) {
-        type = "boss"; // Multi-word Dreadnought flagship
+        type = "boss";
       } else if (r < 0.18 && state.wordsCleared >= 3) {
-        type = "cruiser"; // Heavy hull that splits into 2 shards
+        type = "cruiser";
       } else if (r < 0.42) {
-        type = "scout"; // Fast sleek dart
+        type = "scout";
       }
     }
 
@@ -603,11 +748,11 @@
     if (type === "cruiser") speed *= 0.76;
     if (type === "boss") speed *= 0.52;
     if (type === "jammer") speed *= 1.32;
-    if (state.activeTab === "training") speed *= 0.72; // calmer pace for training focus
+    if (state.activeTab === "training") speed *= 0.68;
 
     const enemy = {
       id: state.nextEntityId++,
-      type, // 'standard' | 'scout' | 'cruiser' | 'shard' | 'boss' | 'jammer'
+      type,
       word,
       typedIndex: 0,
       x,
@@ -618,7 +763,7 @@
       bossChain,
       bossPhaseTotal: bossChain ? bossChain.length + 1 : 1,
       bossPhaseCurrent: 1,
-       isJammer: type === "jammer",
+      isJammer: type === "jammer",
       sender: options.sender || null,
     };
 
@@ -670,8 +815,8 @@
     return found;
   }
 
-  // Launch / Restart Session
-  function startSession( broadcastStart = true ) {
+  // Launch / Restart Active Session
+  function startSession(broadcastStart = true) {
     window.soundEngine.init();
     resizeArena();
 
@@ -714,16 +859,13 @@
     pauseOverlay.classList.add("hidden");
     resultsOverlay.classList.add("hidden");
 
-    launchBtnText.textContent = "RESTART SESSION";
     arenaStatus.textContent = "SECTOR 01 / ENGAGED";
     lockLabel.textContent = "TYPE ANY VISIBLE WORD";
     typedReadout.innerHTML = `ACQUIRE A TARGET<span class="cursor">_</span>`;
 
-    // Wingman ship active in 2P Co-op
     state.wingman.active =
       state.activeTab === "social" && state.socialMode === "coop";
 
-    // Spawn initial wave of words
     for (let i = 0; i < 3; i++) {
       spawnEnemy({ y: 96 + i * 38 });
     }
@@ -747,7 +889,6 @@
 
     let locked = getLockedEnemy();
     if (!locked) {
-      // Lock onto closest enemy (largest Y) starting with `char`
       const candidates = state.enemies.filter(
         (e) => e.typedIndex < e.word.length && e.word[e.typedIndex] === char
       );
@@ -771,7 +912,6 @@
       state.burstTimestamps.push(now);
       updateBurstPeak();
 
-      // Aim player chevron at target
       state.player.targetAngle = Math.atan2(
         locked.y - state.player.y,
         locked.x - state.player.x
@@ -785,7 +925,6 @@
         state.combo
       );
 
-      // Fire laser bolt from player ship
       state.projectiles.push({
         x: state.player.x,
         y: state.player.y - 14,
@@ -843,11 +982,10 @@
       if (state.killsTowardEmp >= 12 && state.empCharges < 3) {
         state.killsTowardEmp = 0;
         state.empCharges++;
-        addFloatingText(state.player.x, state.player.y - 36, "+1 EMP READY", "#5ce1e6");
+        addFloatingText(state.player.x, state.player.y - 36, "+1 EMP READY", "#8aa8c7");
       }
     }
 
-    // Particle burst
     const burstColor = byWingman
       ? "#8aa8c7"
       : enemy.isJammer || enemy.type === "boss"
@@ -864,7 +1002,6 @@
         : "small"
     );
 
-    // Cruiser splits into 2 shards
     if (enemy.type === "cruiser") {
       spawnEnemy({
         type: "shard",
@@ -878,6 +1015,16 @@
         y: enemy.y,
         vx: 45,
       });
+    }
+
+    // Check if Training Lab 20-Word Drill is complete!
+    if (
+      state.activeTab === "training" &&
+      state.wordsCleared >= DRILL_TARGET_WORDS
+    ) {
+      window.soundEngine.playWaveClear();
+      endSession();
+      return;
     }
 
     // Multiplayer 1v1 Duel: every 3 words cleared launches a Jammer word to rival!
@@ -894,7 +1041,6 @@
       }
     }
 
-    // Broadcast P2P Telemetry & Co-op assist
     if (!byWingman && state.peerConnected && state.conn) {
       sendP2P({
         type: "telemetry",
@@ -922,11 +1068,10 @@
       alpha: 0.95,
     });
 
-    // Clear lowest 4 threats & push remaining upward
     state.enemies.sort((a, b) => b.y - a.y);
     const removed = state.enemies.splice(0, Math.min(4, state.enemies.length));
     removed.forEach((e) => {
-      spawnParticles(e.x, e.y, "#5ce1e6", 14);
+      spawnParticles(e.x, e.y, "#8aa8c7", 14);
       state.wordsCleared++;
     });
     state.enemies.forEach((e) => {
@@ -969,6 +1114,8 @@
     }
     lockLabel.textContent = locked.isJammer
       ? "INTERCEPTING RIVAL JAMMER"
+      : locked.type === "boss"
+      ? `DREADNOUGHT SHIELD PHASE ${locked.bossPhaseCurrent}/${locked.bossPhaseTotal}`
       : "TARGET LOCKED";
     const done = locked.word.slice(0, locked.typedIndex).toUpperCase();
     const rest = locked.word.slice(locked.typedIndex).toUpperCase();
@@ -976,35 +1123,48 @@
   }
 
   function updateHudDisplay() {
-    const wpm = getNetWpm();
-    const acc = getAccuracy();
+    const wpm = state.phase === "standby" ? 0 : getNetWpm();
+    const acc = state.phase === "standby" ? 100 : getAccuracy();
     hudWpm.textContent = String(wpm).padStart(2, "0");
     hudAcc.textContent = String(acc);
     hudCombo.textContent = String(state.combo);
 
-    const isCountdown =
+    if (state.activeTab === "training") {
+      const remainingWords = Math.max(0, DRILL_TARGET_WORDS - state.wordsCleared);
+      hudTime.textContent = String(remainingWords);
+      hudTimeUnit.textContent = "w";
+    } else if (
       (state.activeTab === "arena" && state.soloMode === "assessment") ||
-      (state.activeTab === "social" && state.socialMode === "duel");
-
-    if (isCountdown) {
-      hudTime.textContent = String(Math.max(0, Math.ceil(state.timeRemaining)));
+      (state.activeTab === "social" && state.socialMode === "duel")
+    ) {
+      hudTime.textContent = String(
+        state.phase === "standby" ? 60 : Math.max(0, Math.ceil(state.timeRemaining))
+      );
+      hudTimeUnit.textContent = "s";
     } else {
-      hudTime.textContent = String(Math.floor(state.elapsedFlightSec));
+      hudTime.textContent = String(
+        state.phase === "standby" ? 0 : Math.floor(state.elapsedFlightSec)
+      );
+      hudTimeUnit.textContent = "s";
     }
 
-    // Shields & EMP
-    if (state.activeTab === "training" || (state.activeTab === "arena" && state.soloMode === "assessment")) {
+    if (
+      state.activeTab === "training" ||
+      (state.activeTab === "arena" && state.soloMode === "assessment")
+    ) {
       shieldDiamonds.textContent = "◆ ◆ ◆";
       shieldText.textContent = "TRAINING SHIELDS";
     } else {
       const filled = "◆ ".repeat(Math.max(0, state.shields));
       const empty = "◇ ".repeat(Math.max(0, state.maxShields - state.shields));
       shieldDiamonds.textContent = (filled + empty).trim();
-      shieldText.textContent = `${state.shields} SHIELDS REMAINING`;
+      shieldText.textContent =
+        state.phase === "standby"
+          ? "SHIELDS ONLINE"
+          : `${state.shields} SHIELDS REMAINING`;
     }
     empBadge.textContent = `⚡ EMP ×${state.empCharges}`;
 
-    // Multiplayer Bar
     if (state.activeTab === "social") {
       mpSelfStats.textContent = `${wpm} WPM · ${acc}% · ${state.wordsCleared}W`;
       mpPeerStats.textContent = `${state.peerWpm} WPM · ${state.peerAcc}% · ${state.peerWords}W`;
@@ -1018,6 +1178,7 @@
     pauseOverlay.classList.add("hidden");
     keyboardDock.classList.add("hidden");
     resultsOverlay.classList.remove("hidden");
+    syncUIState();
 
     const netWpm = getNetWpm();
     const rawWpm = getRawWpm();
@@ -1025,10 +1186,9 @@
     const peak = Math.max(netWpm, state.peakBurstWpm);
     const activeSec = Math.max(1, Math.round(state.elapsedFlightSec));
 
-    // Check Personal Best
     const recordKey = `${state.soloMode}:${state.difficulty}`;
     const prevBest = profile.bestWpm[recordKey] || 0;
-    const isNewBest = netWpm > prevBest && netWpm > 0;
+    const isNewBest = state.activeTab === "arena" && netWpm > prevBest && netWpm > 0;
     if (isNewBest) {
       profile.bestWpm[recordKey] = netWpm;
     }
@@ -1039,7 +1199,6 @@
     }
     saveProfile();
 
-    // Rank Pill
     const rank =
       netWpm >= 85
         ? "ACE OVERLORD"
@@ -1050,15 +1209,21 @@
         : "ORBITAL CADET";
     resRankPill.textContent = rank;
 
-    // Headlines
-    if (state.activeTab === "social" && state.socialMode === "duel") {
+    if (state.activeTab === "training") {
+      const meta = DRILL_INFO[state.trainingDrill] || DRILL_INFO.homerow;
+      resEyebrow.textContent = `ACADEMY DRILL COMPLETE // ${meta.title.toUpperCase()}`;
+      resHeadline.textContent =
+        acc >= 96
+          ? "Crisp finger discipline. Ready for higher velocity."
+          : "Good drill. Keep anchoring your index fingers on F and J.";
+    } else if (state.activeTab === "social" && state.socialMode === "duel") {
       const won = netWpm >= state.peerWpm;
       resEyebrow.textContent = won
         ? "DUEL VICTORY // RIVAL OUTPACED"
         : "DUEL COMPLETE // DEBRIEF";
       resHeadline.textContent = won
-        ? `You defeated ${mpPeerName.textContent} (${netWpm} vs ${state.peerWpm} WPM)!`
-        : `${mpPeerName.textContent} edged ahead (${state.peerWpm} vs ${netWpm} WPM).`;
+        ? `You defeated ${getActivePartnerName()} (${netWpm} vs ${state.peerWpm} WPM)!`
+        : `${getActivePartnerName()} edged ahead (${state.peerWpm} vs ${netWpm} WPM).`;
     } else if (state.challengeTargetWpm > 0) {
       const beat = netWpm >= state.challengeTargetWpm;
       resEyebrow.textContent = beat
@@ -1086,7 +1251,6 @@
     resCombo.textContent = `${state.maxCombo}×`;
     resTime.textContent = `${activeSec}s`;
 
-    // Weak Keys Breakdown
     resWeakKeys.innerHTML = "";
     const weakEntries = Object.entries(state.sessionMissedKeys).sort(
       (a, b) => b[1] - a[1]
@@ -1113,7 +1277,6 @@
     renderKeyboardDOM();
   }
 
-  // Draw Post-Game WPM Timeline Canvas Chart
   function drawWpmTimelineChart() {
     const c = wpmChart;
     const cw = c.clientWidth || 320;
@@ -1142,7 +1305,6 @@
     const getX = (i) => padX + (i / Math.max(1, pts.length - 1)) * pw;
     const getY = (v) => padY + ph - (Math.min(maxVal, v) / maxVal) * ph;
 
-    // Grid baseline
     g.strokeStyle = "#1f2a36";
     g.lineWidth = 1;
     g.beginPath();
@@ -1150,7 +1312,6 @@
     g.lineTo(cw - padX, padY + ph * 0.5);
     g.stroke();
 
-    // Net WPM Curve (#c7ff6a)
     g.beginPath();
     pts.forEach((p, i) => {
       const x = getX(i);
@@ -1162,7 +1323,6 @@
     g.lineWidth = 2;
     g.stroke();
 
-    // Area Fill
     g.lineTo(getX(pts.length - 1), padY + ph);
     g.lineTo(getX(0), padY + ph);
     g.closePath();
@@ -1200,6 +1360,7 @@
       peer.on("open", () => {
         p2pStatusLine.innerHTML = `Room <strong class="lime-text">${code}</strong> live! Share code or click COPY LINK.`;
         sysStatusText.textContent = `ROOM ${code} // WAITING FOR PEER`;
+        syncUIState();
       });
 
       peer.on("connection", (conn) => {
@@ -1236,6 +1397,7 @@
     state.conn = conn;
     conn.on("open", () => {
       state.peerConnected = true;
+      state.selectedFriend = null;
       navPeerBadge.textContent = "LIVE";
       p2pStatusLine.innerHTML = `<span class="lime-text">CONNECTED!</span> Ready to launch ${state.socialMode.toUpperCase()}.`;
       sysStatusText.textContent = `P2P LINK ACTIVE // ${state.roomCode}`;
@@ -1247,17 +1409,15 @@
       if (!data || typeof data !== "object") return;
       if (data.type === "hello") {
         state.peerCallsign = data.callsign || "WINGMAN";
-        mpPeerName.textContent = state.peerCallsign;
-        // Add to Squadron Roster if not already there
         if (!profile.friends.some((f) => f.name === state.peerCallsign)) {
           profile.friends.unshift({
             name: state.peerCallsign,
-            bestWpm: 60,
+            bestWpm: 65,
             status: "P2P SQUAD",
           });
           saveProfile();
-          renderSquadRoster();
         }
+        syncUIState();
       } else if (data.type === "start") {
         if (data.socialMode) state.socialMode = data.socialMode;
         startSession(false);
@@ -1265,7 +1425,6 @@
         state.peerWpm = data.wpm || 0;
         state.peerAcc = data.acc || 100;
         state.peerWords = data.words || 0;
-        // In Co-op mode, when partner clears a word, their ship fires a laser on our screen!
         if (
           state.socialMode === "coop" &&
           state.phase === "playing" &&
@@ -1281,7 +1440,7 @@
           word: data.word,
           sender: data.sender || state.peerCallsign,
         });
-        addFloatingText(width / 2, 125, `⚠ INCOMING JAMMER FROM ${state.peerCallsign}!`, "#ff4d6d");
+        addFloatingText(width / 2, 125, `⚠ INCOMING JAMMER FROM ${state.peerCallsign}!`, "#d96b52");
       }
     });
 
@@ -1289,6 +1448,7 @@
       state.peerConnected = false;
       navPeerBadge.textContent = "P2P";
       p2pStatusLine.textContent = "Peer disconnected.";
+      syncUIState();
     });
   }
 
@@ -1300,7 +1460,6 @@
     }
   }
 
-  // Wingman Co-op Assist Shot (used by P2P Partner or AI Wingman)
   function wingmanAssistFire() {
     if (state.enemies.length === 0) return;
     const unlocked = state.enemies.filter((e) => e.id !== state.lockedEnemyId);
@@ -1321,7 +1480,7 @@
       tx: target.x,
       ty: target.y,
       targetId: target.id,
-      color: "#5ce1e6",
+      color: "#8aa8c7",
       speed: 1350,
     });
     completeEnemyWord(target, true);
@@ -1331,7 +1490,6 @@
   let lastTime = performance.now();
 
   function update(dt) {
-    // Drift starfield
     for (const s of stars) {
       s.y += s.speed * (state.phase === "playing" ? 1.3 : 0.45) * dt;
       if (s.y > height) {
@@ -1340,15 +1498,20 @@
       }
     }
 
-    // Position ships at bottom of Arena
+    const kbVisible =
+      state.activeTab === "training" &&
+      state.keyboardGuideOn &&
+      state.phase === "playing";
+    const shipBaseY = kbVisible ? height - 235 : height - 42;
+
     if (state.wingman.active) {
       state.player.x = width * 0.42;
-      state.player.y = height - 42;
+      state.player.y = shipBaseY;
       state.wingman.x = width * 0.58;
-      state.wingman.y = height - 42;
+      state.wingman.y = shipBaseY;
     } else {
       state.player.x = width * 0.5;
-      state.player.y = height - 42;
+      state.player.y = shipBaseY;
     }
 
     state.player.angle +=
@@ -1362,7 +1525,6 @@
 
     state.elapsedFlightSec += dt;
 
-    // Sample WPM every 3 seconds for Timeline Chart
     if (state.elapsedFlightSec - state.lastSampleSec >= 3) {
       state.lastSampleSec = state.elapsedFlightSec;
       state.timelineSamples.push({
@@ -1371,7 +1533,6 @@
       });
     }
 
-    // Countdown Timer in Assessment & 1v1 Duel
     const isCountdown =
       (state.activeTab === "arena" && state.soloMode === "assessment") ||
       (state.activeTab === "social" && state.socialMode === "duel");
@@ -1386,41 +1547,36 @@
       }
     }
 
-    // AI Bot Simulation (when in Social mode without a live P2P peer, or AI selected)
+    // AI Bot / Roster Friend Simulation
     if (
       state.activeTab === "social" &&
       (!state.peerConnected || state.partnerType === "bot")
     ) {
-      const targetBotWpm =
-        state.difficulty === "cadet"
-          ? 42
-          : state.difficulty === "pilot"
-          ? 64
-          : 88;
+      const targetBotWpm = getActiveBotTargetWpm();
       state.peerWpm = Math.round(
-        targetBotWpm + Math.sin(state.elapsedFlightSec * 0.6) * 5
+        targetBotWpm + Math.sin(state.elapsedFlightSec * 0.6) * 4
       );
-      state.peerAcc = state.difficulty === "ace" ? 98 : 95;
+      state.peerAcc = targetBotWpm >= 70 ? 98 : 95;
 
       state.botTimer -= dt;
       if (state.botTimer <= 0) {
-        state.botTimer = Math.max(1.8, 60 / (targetBotWpm / 5) * 3.2);
+        state.botTimer = Math.max(1.8, (60 / (targetBotWpm / 5)) * 3.2);
         state.peerWords++;
         if (state.socialMode === "coop") {
           wingmanAssistFire();
         } else if (state.socialMode === "duel" && state.peerWords % 3 === 0) {
           spawnEnemy({
             type: "jammer",
-            sender: `AI-${state.difficulty.toUpperCase()}`,
+            sender: getActivePartnerName(),
           });
-          addFloatingText(width / 2, 125, "⚠ INCOMING RIVAL JAMMER!", "#ff4d6d");
+          addFloatingText(width / 2, 125, "⚠ INCOMING RIVAL JAMMER!", "#d96b52");
         }
       }
     }
 
     // Spawn Enemies
     state.spawnTimer -= dt;
-    const maxActive = state.activeTab === "training" ? 5 : 8;
+    const maxActive = state.activeTab === "training" ? 4 : 8;
     if (state.spawnTimer <= 0 && state.enemies.length < maxActive) {
       spawnEnemy();
       const baseInterval =
@@ -1433,7 +1589,7 @@
     }
 
     // Update Enemies
-    const breachLineY = height - 76;
+    const breachLineY = shipBaseY - 28;
     for (let i = state.enemies.length - 1; i >= 0; i--) {
       const e = state.enemies[i];
       e.hitFlash = Math.max(0, e.hitFlash - dt * 6);
@@ -1449,7 +1605,7 @@
         }
         state.enemies.splice(i, 1);
         state.combo = 0;
-        spawnParticles(e.x, breachLineY, "#ff4d6d", 20);
+        spawnParticles(e.x, breachLineY, "#d96b52", 18);
         window.soundEngine.playError();
 
         const usesHardShields =
@@ -1489,7 +1645,6 @@
       }
     }
 
-    // Update Particles
     for (let i = state.particles.length - 1; i >= 0; i--) {
       const pt = state.particles[i];
       pt.x += pt.vx * dt;
@@ -1498,7 +1653,6 @@
       if (pt.life <= 0) state.particles.splice(i, 1);
     }
 
-    // Update Shockwaves
     for (let i = state.shockwaves.length - 1; i >= 0; i--) {
       const sw = state.shockwaves[i];
       sw.r += (sw.maxR - sw.r) * dt * 5 + 90 * dt;
@@ -1506,7 +1660,6 @@
       if (sw.alpha <= 0) state.shockwaves.splice(i, 1);
     }
 
-    // Update Floating Texts
     for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
       const ft = state.floatingTexts[i];
       ft.y -= 28 * dt;
@@ -1521,9 +1674,8 @@
   function render() {
     ctx.clearRect(0, 0, width, height);
 
-    // 1. Concentric Tactical Radar Arcs around Player Chevron
     const cx = width * 0.5;
-    const cy = height - 38;
+    const cy = state.player.y || height - 42;
     ctx.strokeStyle = "rgba(38, 56, 73, 0.34)";
     ctx.lineWidth = 1;
     [140, 260, 390, 520].forEach((radius) => {
@@ -1532,7 +1684,6 @@
       ctx.stroke();
     });
 
-    // 2. Starfield Particles
     for (const s of stars) {
       ctx.fillStyle = `rgba(215, 230, 245, ${s.alpha})`;
       ctx.beginPath();
@@ -1540,35 +1691,31 @@
       ctx.fill();
     }
 
-    // 3. EMP Shockwaves
     for (const sw of state.shockwaves) {
       ctx.save();
-      ctx.strokeStyle = `rgba(92, 225, 230, ${Math.max(0, sw.alpha)})`;
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgba(138, 168, 199, ${Math.max(0, sw.alpha)})`;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
 
-    // 4. Laser Projectiles
     for (const p of state.projectiles) {
       ctx.save();
       ctx.fillStyle = p.color;
       ctx.shadowColor = p.color;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 8;
       ctx.beginPath();
       ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
 
-    // 5. Falling Enemy Targets (Diamond Reticle + Orbitron Word Pill)
     if (state.phase === "playing" || state.phase === "paused") {
       drawEnemies();
     }
 
-    // 6. Particles & Floating Popups
     for (const pt of state.particles) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
@@ -1589,7 +1736,6 @@
       ctx.restore();
     }
 
-    // 7. Bottom Lime Player Fighter Chevron (+ Steel-Blue Wingman in 2P Co-op)
     drawChevronShip(state.player.x, state.player.y, state.player.angle, "#c7ff6a", state.player.recoil);
     if (state.wingman.active) {
       drawChevronShip(state.wingman.x, state.wingman.y, state.wingman.angle, "#8aa8c7", state.wingman.recoil);
@@ -1634,7 +1780,6 @@
       const isLocked = locked && locked.id === e.id;
       ctx.save();
 
-      // Measure word in Orbitron font (ALL-CAPS)
       const fontSize = e.type === "boss" ? 15 : isLocked ? 14 : 13;
       ctx.font = `700 ${fontSize}px 'Orbitron', sans-serif`;
 
@@ -1653,7 +1798,6 @@
       const boxX = Math.max(10, Math.min(width - boxW - 10, e.x - boxW / 2));
       let boxY = e.y;
 
-      // De-overlap word pills so no two words ever stack on each other
       for (let attempt = 0; attempt < 4; attempt++) {
         const hit = placedBoxes.find(
           (b) =>
@@ -1686,7 +1830,6 @@
       ctx.lineWidth = isLocked ? 1.7 : 1.25;
 
       if (e.type === "boss") {
-        // Dreadnought Octagonal Flagship + Phase Pips
         ctx.beginPath();
         ctx.moveTo(0, 10);
         ctx.lineTo(14, 3);
@@ -1705,7 +1848,6 @@
           ctx.fillRect(-13 + p * 10, -18, 7, 3);
         }
       } else if (e.type === "cruiser") {
-        // Heavy Hexagonal Splitter Hull + Inner Diamond
         ctx.beginPath();
         for (let a = 0; a < 6; a++) {
           const ang = (a * Math.PI) / 3 + Math.PI / 6;
@@ -1721,7 +1863,6 @@
         ctx.rotate(Math.PI / 4);
         ctx.strokeRect(-3.5, -3.5, 7, 7);
       } else if (e.type === "scout" || e.type === "shard") {
-        // Sleek Dart Scout
         ctx.beginPath();
         ctx.moveTo(0, 8);
         ctx.lineTo(8, -6);
@@ -1731,7 +1872,6 @@
         ctx.fill();
         ctx.stroke();
       } else {
-        // Signature Hollow Diamond Target Marker with subtle wing ticks
         ctx.beginPath();
         ctx.moveTo(-12, 0);
         ctx.lineTo(-7, 0);
@@ -1761,7 +1901,7 @@
       ctx.fill();
       ctx.stroke();
 
-      // 3. Render Word in Orbitron
+      // 3. Render Word in ALL-CAPS Orbitron
       const textX = boxX + padX;
       const textY = boxY + 20;
       ctx.textAlign = "left";
@@ -1832,13 +1972,20 @@
       .join("");
   }
 
-  // Event Listeners — Navigation Tabs
+  // Event Listeners — Brand & Navigation Tabs (Always reset to clean Standby for selected Tab!)
+  brandLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    navTabs.forEach((t) => t.classList.toggle("nav-active", t.dataset.tab === "arena"));
+    state.activeTab = "arena";
+    resetToStandby();
+  });
+
   navTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       navTabs.forEach((t) => t.classList.remove("nav-active"));
       tab.classList.add("nav-active");
       state.activeTab = tab.dataset.tab;
-      syncUIState();
+      resetToStandby();
     });
   });
 
@@ -1848,7 +1995,7 @@
       document.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.soloMode = btn.dataset.mode;
-      syncUIState();
+      resetToStandby();
     });
   });
 
@@ -1860,7 +2007,7 @@
         .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.difficulty = btn.dataset.diff;
-      syncUIState();
+      resetToStandby();
     });
   });
 
@@ -1870,7 +2017,7 @@
       document.querySelectorAll(".drill-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.trainingDrill = btn.dataset.drill;
-      syncUIState();
+      resetToStandby();
     });
   });
 
@@ -1894,7 +2041,7 @@
         .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.socialMode = btn.dataset.social;
-      syncUIState();
+      resetToStandby();
     });
   });
 
@@ -1906,7 +2053,10 @@
         .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.partnerType = btn.dataset.partner;
-      syncUIState();
+      if (state.partnerType === "p2p") {
+        state.selectedFriend = null;
+      }
+      resetToStandby();
     });
   });
 
@@ -1939,13 +2089,19 @@
   addFriendBtn.addEventListener("click", () => {
     const callsign = window.prompt("Enter friend's Pilot Callsign:");
     if (callsign && callsign.trim()) {
-      profile.friends.unshift({
+      const newFriend = {
         name: callsign.trim().toUpperCase().slice(0, 14),
         bestWpm: 65,
         status: "SQUAD MATE",
-      });
+      };
+      profile.friends.unshift(newFriend);
+      state.selectedFriend = newFriend;
+      state.partnerType = "bot";
+      document
+        .querySelectorAll("#partnerTypeGroup .seg-btn")
+        .forEach((b) => b.classList.toggle("active", b.dataset.partner === "bot"));
       saveProfile();
-      renderSquadRoster();
+      resetToStandby();
     }
   });
 
@@ -1975,10 +2131,11 @@
     if (statsDialog.close) statsDialog.close();
   });
 
-  // Launch / Resume / Quit / Results Actions
+  // Launch / Resume / Back to Control / Results Actions
   launchBtn.addEventListener("click", () => startSession(true));
   letsFlyBtn.addEventListener("click", () => startSession(true));
   retryBtn.addEventListener("click", () => startSession(true));
+  backToControlBtn.addEventListener("click", () => resetToStandby());
 
   resumeBtn.addEventListener("click", () => {
     if (state.phase === "paused") {
@@ -2002,7 +2159,7 @@
       b.classList.toggle("active", b.dataset.drill === "weakkeys")
     );
     state.trainingDrill = "weakkeys";
-    syncUIState();
+    resetToStandby();
     startSession(false);
   });
 
@@ -2104,18 +2261,18 @@
         state.socialMode = modeParam;
       }
       joinRoomInput.value = roomParam.toUpperCase();
-      syncUIState();
+      resetToStandby();
       setTimeout(() => initPeerRoom(roomParam, false), 600);
     } else if (challengeParam) {
       state.challengeTargetWpm = parseInt(challengeParam, 10) || 0;
       state.challengeChallenger = (byParam || "A COLLEAGUE").toUpperCase();
-      welcomeEyebrow.textContent = `INCOMING DUEL CHALLENGE // ${state.challengeChallenger}`;
-      welcomeTitle.textContent = `Beat ${state.challengeTargetWpm} WPM in the Arena.`;
+      resetToStandby();
+    } else {
+      resetToStandby();
     }
   }
 
   checkUrlParams();
-  syncUIState();
 
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => requestAnimationFrame(animate));

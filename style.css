@@ -539,6 +539,7 @@ button, input {
   border: 1px solid rgba(37, 46, 56, 0.8);
   padding: 6px 9px;
   font-size: 10px;
+  gap: 6px;
 }
 
 .roster-item strong {
@@ -550,6 +551,24 @@ button, input {
 .roster-meta {
   color: var(--muted);
   font-size: 9px;
+}
+
+.roster-challenge-btn {
+  background: #16202b;
+  border: 1px solid var(--line-bright);
+  padding: 3px 7px;
+  font-family: var(--font);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lime);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.roster-challenge-btn:hover {
+  background: #293424;
+  border-color: var(--lime);
 }
 
 /* Primary Launch Button */
@@ -825,10 +844,8 @@ kbd {
 
 /* Interactive Visual Keyboard Dock */
 .keyboard-dock {
-  position: absolute;
-  bottom: 92px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  margin: auto auto 84px;
   z-index: 6;
   background: rgba(10, 16, 24, 0.92);
   border: 1px solid #283645;
