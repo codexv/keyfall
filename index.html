@@ -312,7 +312,7 @@
           </div>
         </div>
 
-        <!-- Center Standby Welcome Overlay -->
+        <!-- Center Standby Welcome Overlay (Used in Solo Arena & Squadron Modes) -->
         <div class="welcome" id="welcomeOverlay">
           <div class="reticle-box">
             <div class="reticle-inner">⌖</div>
@@ -326,6 +326,31 @@
           <button class="lets-fly-btn" id="letsFlyBtn" type="button">
             LET’S FLY <span>↗</span>
           </button>
+        </div>
+
+        <!-- Structured Paragraph Lesson View (Active in TRAINING LAB) -->
+        <div class="training-lesson-view hidden" id="trainingLessonView">
+          <div class="lesson-meta-bar">
+            <div>
+              <span class="lesson-badge" id="lessonBadge">LESSON 01 // HOME ROW</span>
+              <h3 class="lesson-heading" id="lessonHeading">Home Row Anchoring &amp; Rhythm</h3>
+            </div>
+            <div class="lesson-Passages-ctrl">
+              <span class="passage-counter" id="passageCounter">PASSAGE 1 / 3</span>
+              <button class="mini-action-btn" id="nextPassageBtn" type="button">NEXT PASSAGE ↻</button>
+            </div>
+          </div>
+
+          <div class="passage-box" id="passageBox">
+            <div class="passage-text" id="passageText" aria-live="polite">
+              <!-- Character spans populated by game.js -->
+            </div>
+          </div>
+
+          <div class="lesson-status-bar">
+            <span id="lessonPromptText">Begin typing the paragraph above — timer starts on your first keystroke.</span>
+            <span class="lesson-progress-pill" id="lessonProgressPill">0 / 0 CHARS</span>
+          </div>
         </div>
 
         <!-- Interactive Visual Keyboard & Finger Guide Dock (Active in Training Lab or toggleable) -->

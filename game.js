@@ -1,4 +1,4 @@
-// KEYFALL — Tactical Typing Arena, Training Academy & P2P Squadron Engine
+// KEYFALL — Tactical Typing Arena, Paragraph Training Academy & P2P Squadron Engine
 (function () {
   "use strict";
 
@@ -72,12 +72,22 @@
   const welcomeTitle = document.getElementById("welcomeTitle");
   const welcomeDesc = document.getElementById("welcomeDesc");
   const letsFlyBtn = document.getElementById("letsFlyBtn");
-  const reticleBox = welcomeOverlay.querySelector(".reticle-box");
+
+  // Structured Paragraph Lesson Elements (Training Lab)
+  const trainingLessonView = document.getElementById("trainingLessonView");
+  const lessonBadge = document.getElementById("lessonBadge");
+  const lessonHeading = document.getElementById("lessonHeading");
+  const passageCounter = document.getElementById("passageCounter");
+  const nextPassageBtn = document.getElementById("nextPassageBtn");
+  const passageText = document.getElementById("passageText");
+  const lessonPromptText = document.getElementById("lessonPromptText");
+  const lessonProgressPill = document.getElementById("lessonProgressPill");
 
   const keyboardDock = document.getElementById("keyboardDock");
   const kbCoachPrompt = document.getElementById("kbCoachPrompt");
   const kbRows = document.getElementById("kbRows");
 
+  const inputZone = document.querySelector(".input-zone");
   const lockLabel = document.getElementById("lockLabel");
   const typedReadout = document.getElementById("typedReadout");
   const shieldDiamonds = document.getElementById("shieldDiamonds");
@@ -108,8 +118,6 @@
   const backToControlBtn = document.getElementById("backToControlBtn");
   const trainWeakBtn = document.getElementById("trainWeakBtn");
   const shareChallengeBtn = document.getElementById("shareChallengeBtn");
-
-  const DRILL_TARGET_WORDS = 20;
 
   // Persistent Storage Helper
   const STORAGE_KEY = "keyfall_v2_profile";
@@ -227,78 +235,82 @@
     o: { zone: "ring", label: "RIGHT RING" },
     l: { zone: "ring", label: "RIGHT RING" },
     p: { zone: "pinky", label: "RIGHT PINKY" },
+    " ": { zone: "index", label: "THUMB (SPACEBAR)" },
   };
 
+  // Structured Paragraph Curriculum for TRAINING LAB
   const DRILL_INFO = {
     homerow: {
-      title: "01 · Home Row Foundation",
+      badge: "LESSON 01 // HOME ROW FOUNDATION",
+      title: "Home Row Anchoring & Rhythm",
       keys: "A S D F G H J K L",
       coach: "Home-row anchor & return",
-      desc: "Anchor your index fingers on F and J. Clear 20 home-row target words while keeping your wrists steady.",
+      passages: [
+        "sad lad fall flask glad dash shall hall ask salad half glass flag slash all dads had a small glass flask at the hall",
+        "sara and jake shall dash fast past the dark hall as a glad lad holds a half glass flask steady in his hands",
+        "keep your left and right index fingers anchored lightly on f and j as each keystroke flows in a calm even rhythm",
+      ],
     },
     topbottom: {
-      title: "02 · Full Reach & Verticals",
+      badge: "LESSON 02 // FULL VERTICAL REACH",
+      title: "Top & Bottom Row Precision",
       keys: "Q W E R T Y + Z X C V",
       coach: "Vertical reach accuracy",
-      desc: "Practice clean vertical reaches to the top and bottom rows, returning fingers to the home row after each strike.",
+      passages: [
+        "quiet orbital probes drift over the dark horizon while radar sensors track every distant signal across the deep sector",
+        "pilots calibrate the navigation matrix before entering deep space vectors where gravity waves bend the silver starlight",
+        "verify the thermal shield integrity and align the primary thrusters to maintain steady velocity through the asteroid belt",
+      ],
     },
     burst: {
-      title: "03 · High-Velocity Alternation",
+      badge: "LESSON 03 // HIGH-VELOCITY FLOW",
+      title: "Alternating-Hand Cadence Passages",
       keys: "ALTERNATING HANDS",
       coach: "High-velocity bigrams",
-      desc: "Build raw burst WPM with words engineered to alternate rapidly between your left and right hands.",
+      passages: [
+        "the visual panel shows eight clear signals moving toward the core station at high speed and steady tactical rhythm",
+        "focus your mind on clean hand motion and light keystrokes so every word flows without hesitation or excess tension",
+        "rapid tactical response depends on calm posture balanced timing and smooth transitions between your left and right hands",
+      ],
     },
     weakkeys: {
-      title: "04 · Adaptive Weak-Key Clinic",
+      badge: "LESSON 04 // ADAPTIVE WEAK-KEY CLINIC",
+      title: "Personalized Error-Elimination Passage",
       keys: "PERSONAL MISSED KEYS",
-      coach: "Adaptive error elimination",
-      desc: "Dynamically generates target words containing the exact letters you've missed most across your flights.",
+      coach: "Targeted weak-key synthesis",
+      passages: [], // Generated dynamically from profile.weakKeys
     },
   };
 
-  // Curated Training Word Lists
-  const HOME_ROW_WORDS = [
-    "add", "all", "ask", "dad", "fad", "fall", "flask", "glad", "half", "hall",
-    "had", "has", "jag", "jak", "lad", "lass", "sad", "salad", "sash", "shall",
-    "slag", "slash", "dash", "flag", "flak", "gash", "glass", "hash", "kala", "skald"
-  ];
+  // Compose a natural practice paragraph targeting the user's missed keys
+  function generateWeakKeyPassage() {
+    const weakChars = Object.entries(profile.weakKeys)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([k]) => k);
 
-  const ALTERNATING_WORDS = [
-    "aid", "air", "also", "ant", "apron", "auger", "authentic", "auto", "big", "blame",
-    "bog", "both", "burn", "chair", "chapel", "city", "clan", "clay", "coal", "coat",
-    "cod", "cog", "colt", "coma", "comb", "coral", "cork", "corn", "cot", "cue",
-    "cut", "dame", "island", "ivory", "jar", "jay", "kept", "key", "lake", "lamb",
-    "lame", "land", "lane", "lap", "lapel", "larva", "larch", "lash", "latch", "late",
-    "laugh", "lay", "leapt", "lend", "lens", "lent", "light", "lint", "load", "loan",
-    "lock", "mane", "map", "maple", "marl", "mate", "may", "meant", "mend", "mental",
-    "mock", "name", "nap", "nape", "navy", "neighbor", "oak", "oar", "oat", "oil",
-    "omen", "oral", "orient", "ornament", "own", "oxen", "paid", "pail", "pain", "paint",
-    "pair", "pale", "palm", "pan", "pane", "panel", "pang", "pant", "par", "pay",
-    "pelican", "pen", "penal", "pendant", "pens", "pent", "pet", "pity", "plan", "plane",
-    "planet", "plank", "plant", "plaza", "poem", "poet", "pro", "profit", "prop", "quench",
-    "right", "risk", "ritual", "roam", "roar", "rock", "rod", "romp", "rope", "rough",
-    "royalty", "rub", "rude", "rug", "ruin", "rule", "rum", "run", "rush", "rust",
-    "sake", "sale", "salt", "same", "sand", "sane", "sang", "sank", "save", "seal",
-    "seam", "seat", "sect", "senate", "send", "sent", "shack", "shady", "shaft", "shake",
-    "shale", "shame", "shank", "shape", "shard", "share", "shark", "sharp", "shave", "shawl",
-    "sheaf", "shear", "shed", "shell", "shift", "shin", "shine", "ship", "shirt", "shoal",
-    "shock", "shoe", "shone", "shook", "shoot", "shop", "shore", "short", "shot", "shovel",
-    "show", "shown", "shred", "shrew", "shriek", "shrill", "shrimp", "shrine", "shrink", "shroud",
-    "shrub", "shrug", "shudder", "shuffle", "shunt", "shut", "sick", "side", "sift", "sigh",
-    "sight", "sign", "signal", "silk", "sill", "silo", "silt", "silver", "simple", "since",
-    "sinew", "sing", "single", "sink", "siren", "site", "size", "skate", "sketch", "skid",
-    "skiff", "skill", "skim", "skin", "skip", "skirt", "skull", "slab", "slack", "slam",
-    "slander", "slang", "slant", "slap", "slash", "slate", "sleek", "sleep", "sleet", "sleeve",
-    "slender", "slice", "slick", "slide", "slight", "slim", "sling", "slip", "slither", "sliver",
-    "slogan", "slope", "slouch", "slow", "slumber", "slump", "smack", "small", "smart", "smash",
-    "smear", "smell", "smile", "smirk", "smith", "smoke", "smooth", "snack", "snail", "snake",
-    "snap", "snare", "snarl", "snatch", "sneak", "sniff", "snipe", "solar", "solder", "soldier",
-    "solemn", "solid", "solve", "sonar", "song", "sonic", "soon", "soothe", "sorrow", "sound",
-    "source", "south", "space", "spade", "span", "spark", "sparrow", "sparse", "spatial", "spawn",
-    "speak", "spear", "special", "species", "speck", "speech", "speed", "spell", "spend", "sphere",
-    "spice", "spider", "spike", "spill", "spin", "spine", "spiral", "spirit", "splash", "split",
-    "spoil", "spoke", "sponge", "sponsor", "spool", "spoon", "spore", "sport", "spot", "spout"
-  ];
+    if (weakChars.length === 0) {
+      return "steady orbital telemetry confirms all primary keyboard sensors are calibrated type this baseline passage with clean accuracy to log your key profile";
+    }
+
+    const pool = [
+      ...window.WORD_BANKS.short,
+      ...window.WORD_BANKS.medium,
+      ...window.WORD_BANKS.long,
+    ];
+    const matching = pool.filter((w) =>
+      weakChars.some((ch) => w.includes(ch))
+    );
+    const source = matching.length >= 20 ? matching : pool;
+    const words = [];
+    for (let i = 0; i < 20; i++) {
+      const pick = source[Math.floor(Math.random() * source.length)];
+      if (words[words.length - 1] !== pick) {
+        words.push(pick);
+      }
+    }
+    return words.join(" ");
+  }
 
   // Game & UI State
   const state = {
@@ -309,10 +321,14 @@
     soloMode: "assessment", // 'assessment' | 'survival'
     difficulty: "pilot", // 'cadet' | 'pilot' | 'ace'
     trainingDrill: "homerow", // 'homerow' | 'topbottom' | 'burst' | 'weakkeys'
+    passageIndex: 0,
+    passageString: "",
+    passageCursor: 0,
+    passageCharHadError: {}, // index -> boolean
     keyboardGuideOn: true,
     socialMode: "duel", // 'duel' | 'coop'
     partnerType: "p2p", // 'p2p' | 'bot'
-    selectedFriend: null, // { name, bestWpm, status } when challenging a roster friend
+    selectedFriend: null,
 
     // Challenge Seed/Target (from URL ?challenge=...)
     challengeTargetWpm: 0,
@@ -396,7 +412,7 @@
     alpha: Math.random() * 0.45 + 0.12,
   }));
 
-  // Build On-Screen Keyboard DOM
+  // Build On-Screen Keyboard DOM (including Spacebar)
   function renderKeyboardDOM() {
     kbRows.innerHTML = "";
     const topWeak = new Set(
@@ -422,8 +438,53 @@
       });
       kbRows.appendChild(rowEl);
     });
+
+    // Spacebar Row
+    const spaceRow = document.createElement("div");
+    spaceRow.className = "kb-row";
+    const spaceKey = document.createElement("div");
+    spaceKey.className = "kb-key kb-space finger-index";
+    spaceKey.dataset.key = " ";
+    spaceKey.textContent = "SPACE";
+    spaceRow.appendChild(spaceKey);
+    kbRows.appendChild(spaceRow);
   }
   renderKeyboardDOM();
+
+  // Load & Render a Structured Paragraph into #passageText
+  function loadTrainingPassage(advanceIndex = false) {
+    const meta = DRILL_INFO[state.trainingDrill] || DRILL_INFO.homerow;
+    if (state.trainingDrill === "weakkeys") {
+      state.passageString = generateWeakKeyPassage();
+      passageCounter.textContent = "ADAPTIVE PASSAGE";
+    } else {
+      if (advanceIndex) {
+        state.passageIndex = (state.passageIndex + 1) % meta.passages.length;
+      }
+      state.passageString = meta.passages[state.passageIndex % meta.passages.length];
+      passageCounter.textContent = `PASSAGE ${(state.passageIndex % meta.passages.length) + 1} / ${meta.passages.length}`;
+    }
+
+    lessonBadge.textContent = meta.badge;
+    lessonHeading.textContent = meta.title;
+
+    state.passageCursor = 0;
+    state.passageCharHadError = {};
+
+    passageText.innerHTML = "";
+    for (let i = 0; i < state.passageString.length; i++) {
+      const ch = state.passageString[i];
+      const span = document.createElement("span");
+      span.className = "p-char" + (i === 0 ? " active-cursor" : "");
+      span.textContent = ch;
+      passageText.appendChild(span);
+    }
+
+    lessonPromptText.textContent =
+      "Begin typing the paragraph above — timer starts on your first keystroke.";
+    lessonProgressPill.textContent = `0 / ${state.passageString.length} CHARS`;
+    updateKeyboardHighlight();
+  }
 
   // Highlight Next Required Key on Keyboard Dock
   function updateKeyboardHighlight() {
@@ -431,21 +492,125 @@
     allKeys.forEach((k) => k.classList.remove("target-next"));
 
     let nextChar = null;
-    const locked = getLockedEnemy();
-    if (locked && locked.typedIndex < locked.word.length) {
-      nextChar = locked.word[locked.typedIndex];
-    } else if (state.enemies.length > 0) {
-      const closest = [...state.enemies].sort((a, b) => b.y - a.y)[0];
-      if (closest) nextChar = closest.word[closest.typedIndex || 0];
+    if (state.activeTab === "training") {
+      if (state.passageString && state.passageCursor < state.passageString.length) {
+        nextChar = state.passageString[state.passageCursor];
+      }
+    } else {
+      const locked = getLockedEnemy();
+      if (locked && locked.typedIndex < locked.word.length) {
+        nextChar = locked.word[locked.typedIndex];
+      } else if (state.enemies.length > 0) {
+        const closest = [...state.enemies].sort((a, b) => b.y - a.y)[0];
+        if (closest) nextChar = closest.word[closest.typedIndex || 0];
+      }
     }
 
-    if (nextChar && FINGER_MAP[nextChar]) {
-      const targetEl = kbRows.querySelector(`.kb-key[data-key="${nextChar}"]`);
+    if (nextChar !== null && FINGER_MAP[nextChar]) {
+      const selector =
+        nextChar === " "
+          ? `.kb-key.kb-space`
+          : `.kb-key[data-key="${nextChar}"]`;
+      const targetEl = kbRows.querySelector(selector);
       if (targetEl) targetEl.classList.add("target-next");
       const meta = FINGER_MAP[nextChar];
-      kbCoachPrompt.textContent = `NEXT KEY: [${nextChar.toUpperCase()}] — USE ${meta.label}`;
+      const keyLabel = nextChar === " " ? "SPACE" : nextChar.toUpperCase();
+      kbCoachPrompt.textContent = `NEXT KEY: [${keyLabel}] — USE ${meta.label}`;
     } else {
       kbCoachPrompt.textContent = "HOME ROW READY — ANCHOR FINGERS ON [ASDF] [JKL;]";
+    }
+  }
+
+  // Handle Keystroke inside Structured Paragraph Lesson (Training Lab)
+  function handleTrainingParagraphKey(key) {
+    if (state.phase === "results" || state.phase === "paused") return;
+
+    const spans = passageText.querySelectorAll(".p-char");
+    if (!spans.length) return;
+
+    // Backspace steps back one character if desired
+    if (key === "Backspace") {
+      if (state.passageCursor > 0) {
+        spans[state.passageCursor]?.classList.remove("active-cursor", "typed-error");
+        state.passageCursor--;
+        spans[state.passageCursor].className = "p-char active-cursor";
+        lessonProgressPill.textContent = `${state.passageCursor} / ${state.passageString.length} CHARS`;
+        updateKeyboardHighlight();
+        updateHudDisplay();
+      }
+      return;
+    }
+
+    const now = performance.now();
+    if (state.phase === "standby") {
+      window.soundEngine.init();
+      state.phase = "playing";
+      state.sessionStartTime = now;
+      state.firstKeyTime = now;
+      state.elapsedFlightSec = 0;
+      arenaStatus.textContent = "ACADEMY // LESSON ACTIVE";
+      lessonPromptText.textContent =
+        "Keep a smooth, steady rhythm — each correct letter lights up.";
+      syncUIState();
+    } else if (!state.firstKeyTime) {
+      state.firstKeyTime = now;
+    }
+
+    state.totalKeys++;
+    const expected = state.passageString[state.passageCursor];
+    const currentSpan = spans[state.passageCursor];
+
+    if (key === expected) {
+      state.correctKeys++;
+      state.combo++;
+      if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+      state.burstTimestamps.push(now);
+      updateBurstPeak();
+
+      window.soundEngine.playShot(state.passageCursor % 6, 6, state.combo);
+
+      // Light up the character in lime (or amber if it had a prior typo on this position)
+      if (currentSpan) {
+        currentSpan.className = state.passageCharHadError[state.passageCursor]
+          ? "p-char typed-correct"
+          : "p-char typed-correct";
+      }
+
+      if (expected === " " || state.passageCursor === state.passageString.length - 1) {
+        state.wordsCleared++;
+      }
+
+      state.passageCursor++;
+      lessonProgressPill.textContent = `${state.passageCursor} / ${state.passageString.length} CHARS`;
+
+      // Completed the entire paragraph!
+      if (state.passageCursor >= state.passageString.length) {
+        window.soundEngine.playWaveClear();
+        endSession();
+        return;
+      }
+
+      spans[state.passageCursor].classList.add("active-cursor");
+      updateKeyboardHighlight();
+      updateHudDisplay();
+    } else {
+      // Mistyped character: highlight current character red & log weak key
+      state.errorKeys++;
+      state.combo = 0;
+      state.passageCharHadError[state.passageCursor] = true;
+      if (currentSpan) {
+        currentSpan.classList.add("typed-error");
+      }
+      const missedTarget = expected === " " ? null : expected;
+      if (missedTarget) {
+        state.sessionMissedKeys[missedTarget] =
+          (state.sessionMissedKeys[missedTarget] || 0) + 1;
+        profile.weakKeys[missedTarget] =
+          (profile.weakKeys[missedTarget] || 0) + 1;
+        saveProfile();
+      }
+      window.soundEngine.playError();
+      updateHudDisplay();
     }
   }
 
@@ -498,8 +663,8 @@
     return state.difficulty === "cadet" ? 42 : state.difficulty === "pilot" ? 64 : 88;
   }
 
-  // Cleanly Reset Arena to Standby State when switching tabs, modes, or returning to Mission Control
-  function resetToStandby() {
+  // Cleanly Reset Arena / Training View to Standby State
+  function resetToStandby(advancePassage = false) {
     state.phase = "standby";
     state.enemies = [];
     state.projectiles = [];
@@ -508,20 +673,36 @@
     state.floatingTexts = [];
     state.lockedEnemyId = null;
     state.combo = 0;
+    state.maxCombo = 0;
     state.wordsCleared = 0;
     state.correctKeys = 0;
     state.totalKeys = 0;
     state.errorKeys = 0;
+    state.firstKeyTime = 0;
+    state.elapsedFlightSec = 0;
+    state.sessionMissedKeys = {};
+    state.timelineSamples = [];
+    state.lastSampleSec = 0;
     state.shields = 3;
     state.empCharges = 2;
 
     pauseOverlay.classList.add("hidden");
     resultsOverlay.classList.add("hidden");
-    welcomeOverlay.classList.remove("hidden");
 
-    arenaStatus.textContent = "SECTOR 01 / STANDBY";
-    lockLabel.textContent = "TARGETING SYSTEM";
-    typedReadout.innerHTML = `AWAITING INPUT<span class="cursor">_</span>`;
+    if (state.activeTab === "training") {
+      welcomeOverlay.classList.add("hidden");
+      trainingLessonView.classList.remove("hidden");
+      if (inputZone) inputZone.classList.add("hidden");
+      arenaStatus.textContent = "ACADEMY // READY";
+      loadTrainingPassage(advancePassage);
+    } else {
+      trainingLessonView.classList.add("hidden");
+      welcomeOverlay.classList.remove("hidden");
+      if (inputZone) inputZone.classList.remove("hidden");
+      arenaStatus.textContent = "SECTOR 01 / STANDBY";
+      lockLabel.textContent = "TARGETING SYSTEM";
+      typedReadout.innerHTML = `AWAITING INPUT<span class="cursor">_</span>`;
+    }
 
     state.wingman.active =
       state.activeTab === "social" && state.socialMode === "coop";
@@ -540,13 +721,8 @@
     const showKb =
       state.activeTab === "training" &&
       state.keyboardGuideOn &&
-      (state.phase === "playing" || state.phase === "standby");
+      state.phase !== "results";
     keyboardDock.classList.toggle("hidden", !showKb);
-
-    // Keep Welcome screen compact when Keyboard Dock is shown below it in Training standby
-    if (reticleBox) {
-      reticleBox.classList.toggle("hidden", showKb && state.phase === "standby");
-    }
 
     const showMpBar =
       state.activeTab === "social" &&
@@ -602,8 +778,8 @@
       heroEyebrow.textContent = "ORBITAL TYPING ACADEMY";
       heroTitle.innerHTML = `Build muscle<br /><span class="lime-text">memory.</span>`;
       heroSubtitle.textContent =
-        "Interactive finger-zone coaching, rhythm drills, and personalized weak-key clinics.";
-      simModeTitle.textContent = "TRAINING SIMULATION";
+        "Structured paragraph lessons where every correct letter lights up, paired with live finger-zone coaching.";
+      simModeTitle.textContent = "PARAGRAPH LESSON TRAINER";
 
       weakKeyDrillSub.textContent =
         weakList.length > 0
@@ -619,17 +795,12 @@
           : meta.keys;
       infoDrillCoach.textContent = meta.coach;
 
-      hudTimeLabel.textContent = "WORDS LEFT";
-      hudTimeUnit.textContent = "w";
+      hudTimeLabel.textContent = "PROGRESS";
+      hudTimeUnit.textContent = "%";
 
-      launchBtnText.textContent = isRunning ? "RESTART DRILL" : "START DRILL";
+      launchBtnText.textContent = isRunning ? "RESTART PASSAGE" : "NEW PASSAGE";
       sidebarTipText.textContent =
-        "Watch the highlighted key on the finger-map below—return your index fingers to F and J.";
-
-      welcomeEyebrow.textContent = "02 // ORBITAL TYPING ACADEMY";
-      welcomeTitle.textContent = meta.title;
-      welcomeDesc.textContent = meta.desc;
-      letsFlyBtn.innerHTML = `START 20-WORD DRILL <span>↗</span>`;
+        "Start typing the paragraph directly—each correct letter lights up in lime and guides your next finger.";
     } else if (state.activeTab === "social") {
       heroEyebrow.textContent = "SQUADRON MULTIPLAYER NETWORK";
       heroTitle.innerHTML = `Duel rivals.<br />Defend <span class="lime-text">together.</span>`;
@@ -692,7 +863,7 @@
     updateKeyboardHighlight();
   }
 
-  // Word Picker with Mode/Drill Awareness & Unique First-Letter Priority
+  // Word Picker for Solo Arena & Squadron Modes
   function selectWordForSpawn() {
     const activeInitials = new Set(
       state.enemies.map((e) => e.word[e.typedIndex] || e.word[0])
@@ -700,44 +871,18 @@
     const activeWords = new Set(state.enemies.map((e) => e.word));
 
     let pool = window.WORD_BANKS.medium;
-
-    if (state.activeTab === "training") {
-      if (state.trainingDrill === "homerow") {
-        pool = HOME_ROW_WORDS;
-      } else if (state.trainingDrill === "burst") {
-        pool = ALTERNATING_WORDS;
-      } else if (state.trainingDrill === "weakkeys") {
-        const weakChars = Object.entries(profile.weakKeys)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 4)
-          .map(([k]) => k);
-        if (weakChars.length > 0) {
-          const allWords = [
-            ...window.WORD_BANKS.short,
-            ...window.WORD_BANKS.medium,
-          ];
-          const filtered = allWords.filter((w) =>
-            weakChars.some((ch) => w.includes(ch))
-          );
-          if (filtered.length >= 15) pool = filtered;
-        }
-      } else {
-        pool = [...window.WORD_BANKS.short, ...window.WORD_BANKS.medium];
-      }
+    if (state.difficulty === "cadet") {
+      pool = window.WORD_BANKS.short;
+    } else if (state.difficulty === "pilot") {
+      pool =
+        Math.random() < 0.35
+          ? window.WORD_BANKS.short
+          : window.WORD_BANKS.medium;
     } else {
-      if (state.difficulty === "cadet") {
-        pool = window.WORD_BANKS.short;
-      } else if (state.difficulty === "pilot") {
-        pool =
-          Math.random() < 0.35
-            ? window.WORD_BANKS.short
-            : window.WORD_BANKS.medium;
-      } else {
-        pool =
-          Math.random() < 0.55
-            ? window.WORD_BANKS.long
-            : window.WORD_BANKS.medium;
-      }
+      pool =
+        Math.random() < 0.55
+          ? window.WORD_BANKS.long
+          : window.WORD_BANKS.medium;
     }
 
     for (let i = 0; i < 25; i++) {
@@ -747,8 +892,10 @@
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  // Spawn Enemy Word / Ship
+  // Spawn Enemy Word / Ship (Arena & Squadron modes)
   function spawnEnemy(options = {}) {
+    if (state.activeTab === "training") return null;
+
     const diffMult =
       state.difficulty === "cadet"
         ? 0.78
@@ -760,7 +907,7 @@
     const paceBoost = 1 + Math.min(0.6, Math.max(0, (liveWpm - 45) / 140));
 
     let type = options.type || "standard";
-    if (!options.type && state.activeTab !== "training") {
+    if (!options.type) {
       const hasBoss = state.enemies.some((e) => e.type === "boss");
       const r = Math.random();
       if (!hasBoss && state.wordsCleared > 0 && state.wordsCleared % 10 === 0) {
@@ -796,7 +943,6 @@
     if (type === "cruiser") speed *= 0.76;
     if (type === "boss") speed *= 0.52;
     if (type === "jammer") speed *= 1.32;
-    if (state.activeTab === "training") speed *= 0.68;
 
     const enemy = {
       id: state.nextEntityId++,
@@ -816,14 +962,13 @@
     };
 
     state.enemies.push(enemy);
-    updateKeyboardHighlight();
     return enemy;
   }
 
   // WPM & Accuracy Calculations
   function getActiveMinutes() {
     if (!state.firstKeyTime) return 0;
-    const ms = Math.max(2200, performance.now() - state.firstKeyTime);
+    const ms = Math.max(1800, performance.now() - state.firstKeyTime);
     return ms / 60000;
   }
 
@@ -847,7 +992,7 @@
   function updateBurstPeak() {
     const now = performance.now();
     state.burstTimestamps = state.burstTimestamps.filter((t) => now - t <= 5000);
-    if (state.firstKeyTime && now - state.firstKeyTime >= 2500) {
+    if (state.firstKeyTime && now - state.firstKeyTime >= 2200) {
       const burst = Math.round((state.burstTimestamps.length / 5) * 12);
       if (burst > state.peakBurstWpm) state.peakBurstWpm = burst;
     }
@@ -867,6 +1012,12 @@
   function startSession(broadcastStart = true) {
     window.soundEngine.init();
     resizeArena();
+
+    // In Training Lab, clicking Launch/Retry resets or loads the structured paragraph
+    if (state.activeTab === "training") {
+      resetToStandby(false);
+      return;
+    }
 
     state.phase = "playing";
     state.wave = 1;
@@ -904,8 +1055,10 @@
     state.botTimer = 2.0;
 
     welcomeOverlay.classList.add("hidden");
+    trainingLessonView.classList.add("hidden");
     pauseOverlay.classList.add("hidden");
     resultsOverlay.classList.add("hidden");
+    if (inputZone) inputZone.classList.remove("hidden");
 
     arenaStatus.textContent = "SECTOR 01 / ENGAGED";
     lockLabel.textContent = "TYPE ANY VISIBLE WORD";
@@ -927,7 +1080,7 @@
     updateHudDisplay();
   }
 
-  // Handle Character Keystroke
+  // Handle Character Keystroke (Arena & Squadron Shooter Modes)
   function handleCharInput(char) {
     if (state.phase !== "playing") return;
 
@@ -1000,7 +1153,6 @@
 
       updateTypedReadout();
       updateHudDisplay();
-      updateKeyboardHighlight();
     } else {
       recordMistake(expected);
     }
@@ -1065,16 +1217,6 @@
       });
     }
 
-    // Check if Training Lab 20-Word Drill is complete!
-    if (
-      state.activeTab === "training" &&
-      state.wordsCleared >= DRILL_TARGET_WORDS
-    ) {
-      window.soundEngine.playWaveClear();
-      endSession();
-      return;
-    }
-
     // Multiplayer 1v1 Duel: every 3 words cleared launches a Jammer word to rival!
     if (
       !byWingman &&
@@ -1100,8 +1242,9 @@
     }
   }
 
-  // Detonate EMP Shockwave (Spacebar)
+  // Detonate EMP Shockwave (Spacebar in Shooter Modes)
   function triggerEmp() {
+    if (state.activeTab === "training") return;
     if (state.phase !== "playing" || state.empCharges <= 0 || state.enemies.length === 0) {
       return;
     }
@@ -1129,7 +1272,6 @@
     state.lockedEnemyId = null;
     updateTypedReadout();
     updateHudDisplay();
-    updateKeyboardHighlight();
   }
 
   function spawnParticles(x, y, color, count = 16) {
@@ -1178,9 +1320,12 @@
     hudCombo.textContent = String(state.combo);
 
     if (state.activeTab === "training") {
-      const remainingWords = Math.max(0, DRILL_TARGET_WORDS - state.wordsCleared);
-      hudTime.textContent = String(remainingWords);
-      hudTimeUnit.textContent = "w";
+      const pct =
+        state.passageString.length > 0
+          ? Math.round((state.passageCursor / state.passageString.length) * 100)
+          : 0;
+      hudTime.textContent = String(pct);
+      hudTimeUnit.textContent = "%";
     } else if (
       (state.activeTab === "arena" && state.soloMode === "assessment") ||
       (state.activeTab === "social" && state.socialMode === "duel")
@@ -1201,7 +1346,8 @@
       (state.activeTab === "arena" && state.soloMode === "assessment")
     ) {
       shieldDiamonds.textContent = "◆ ◆ ◆";
-      shieldText.textContent = "TRAINING SHIELDS";
+      shieldText.textContent =
+        state.activeTab === "training" ? "ACADEMY MODE" : "TRAINING SHIELDS";
     } else {
       const filled = "◆ ".repeat(Math.max(0, state.shields));
       const empty = "◇ ".repeat(Math.max(0, state.maxShields - state.shields));
@@ -1211,6 +1357,7 @@
           ? "SHIELDS ONLINE"
           : `${state.shields} SHIELDS REMAINING`;
     }
+    empBadge.classList.toggle("hidden", state.activeTab === "training");
     empBadge.textContent = `⚡ EMP ×${state.empCharges}`;
 
     if (state.activeTab === "social") {
@@ -1255,37 +1402,41 @@
 
     if (state.activeTab === "training") {
       const meta = DRILL_INFO[state.trainingDrill] || DRILL_INFO.homerow;
-      resEyebrow.textContent = `ACADEMY DRILL COMPLETE // ${meta.title.toUpperCase()}`;
+      resEyebrow.textContent = `PASSAGE COMPLETE // ${meta.badge}`;
       resHeadline.textContent =
         acc >= 96
-          ? "Crisp finger discipline. Ready for higher velocity."
-          : "Good drill. Keep anchoring your index fingers on F and J.";
-    } else if (state.activeTab === "social" && state.socialMode === "duel") {
-      const won = netWpm >= state.peerWpm;
-      resEyebrow.textContent = won
-        ? "DUEL VICTORY // RIVAL OUTPACED"
-        : "DUEL COMPLETE // DEBRIEF";
-      resHeadline.textContent = won
-        ? `You defeated ${getActivePartnerName()} (${netWpm} vs ${state.peerWpm} WPM)!`
-        : `${getActivePartnerName()} edged ahead (${state.peerWpm} vs ${netWpm} WPM).`;
-    } else if (state.challengeTargetWpm > 0) {
-      const beat = netWpm >= state.challengeTargetWpm;
-      resEyebrow.textContent = beat
-        ? "CHALLENGE CONQUERED!"
-        : "CHALLENGE ATTEMPT COMPLETE";
-      resHeadline.textContent = beat
-        ? `You beat ${state.challengeChallenger}'s ${state.challengeTargetWpm} WPM!`
-        : `${state.challengeTargetWpm - netWpm} WPM away from ${state.challengeChallenger}'s mark.`;
+          ? "Crisp finger discipline. Ready for the next passage."
+          : "Good passage. Keep anchoring your index fingers on F and J.";
+      retryBtn.textContent = "NEXT PASSAGE ↗";
     } else {
-      resEyebrow.textContent = isNewBest
-        ? "FLIGHT COMPLETE / NEW PERSONAL BEST"
-        : "FLIGHT COMPLETE / WPM ASSESSMENT";
-      resHeadline.textContent =
-        netWpm >= 70
-          ? "Lethal precision in the arena."
-          : netWpm >= 45
-          ? "Solid rhythm. Your flow is locking in."
-          : "Your journey starts here.";
+      retryBtn.textContent = "FLY AGAIN ↗";
+      if (state.activeTab === "social" && state.socialMode === "duel") {
+        const won = netWpm >= state.peerWpm;
+        resEyebrow.textContent = won
+          ? "DUEL VICTORY // RIVAL OUTPACED"
+          : "DUEL COMPLETE // DEBRIEF";
+        resHeadline.textContent = won
+          ? `You defeated ${getActivePartnerName()} (${netWpm} vs ${state.peerWpm} WPM)!`
+          : `${getActivePartnerName()} edged ahead (${state.peerWpm} vs ${netWpm} WPM).`;
+      } else if (state.challengeTargetWpm > 0) {
+        const beat = netWpm >= state.challengeTargetWpm;
+        resEyebrow.textContent = beat
+          ? "CHALLENGE CONQUERED!"
+          : "CHALLENGE ATTEMPT COMPLETE";
+        resHeadline.textContent = beat
+          ? `You beat ${state.challengeChallenger}'s ${state.challengeTargetWpm} WPM!`
+          : `${state.challengeTargetWpm - netWpm} WPM away from ${state.challengeChallenger}'s mark.`;
+      } else {
+        resEyebrow.textContent = isNewBest
+          ? "FLIGHT COMPLETE / NEW PERSONAL BEST"
+          : "FLIGHT COMPLETE / WPM ASSESSMENT";
+        resHeadline.textContent =
+          netWpm >= 70
+            ? "Lethal precision in the arena."
+            : netWpm >= 45
+            ? "Solid rhythm. Your flow is locking in."
+            : "Your journey starts here.";
+      }
     }
 
     resNetWpm.textContent = String(netWpm);
@@ -1314,7 +1465,7 @@
       const fingerInfo = FINGER_MAP[weakEntries[0][0]];
       resCoaching.textContent = `Focus tip: Key [${worstKey}] (${
         fingerInfo ? fingerInfo.label : "INDEX"
-      }) had the most misfires. Click 'TRAIN WEAK KEYS' below for a targeted drill.`;
+      }) had the most misfires. Click 'TRAIN WEAK KEYS' below for a targeted paragraph.`;
     }
 
     drawWpmTimelineChart();
@@ -1535,19 +1686,14 @@
 
   function update(dt) {
     for (const s of stars) {
-      s.y += s.speed * (state.phase === "playing" ? 1.3 : 0.45) * dt;
+      s.y += s.speed * (state.phase === "playing" ? 1.1 : 0.4) * dt;
       if (s.y > height) {
         s.y = 0;
         s.x = Math.random() * width;
       }
     }
 
-    const kbVisible =
-      state.activeTab === "training" &&
-      state.keyboardGuideOn &&
-      state.phase === "playing";
-    const shipBaseY = kbVisible ? height - 235 : height - 42;
-
+    const shipBaseY = height - 42;
     if (state.wingman.active) {
       state.player.x = width * 0.42;
       state.player.y = shipBaseY;
@@ -1575,6 +1721,12 @@
         wpm: getNetWpm(),
         raw: getRawWpm(),
       });
+    }
+
+    // In Training Lab, paragraph progression is keystroke-driven (no falling enemies)
+    if (state.activeTab === "training") {
+      updateHudDisplay();
+      return;
     }
 
     const isCountdown =
@@ -1620,7 +1772,7 @@
 
     // Spawn Enemies
     state.spawnTimer -= dt;
-    const maxActive = state.activeTab === "training" ? 4 : 8;
+    const maxActive = 8;
     if (state.spawnTimer <= 0 && state.enemies.length < maxActive) {
       spawnEnemy();
       const baseInterval =
@@ -1663,7 +1815,6 @@
             return;
           }
         }
-        updateKeyboardHighlight();
       }
     }
 
@@ -1719,7 +1870,7 @@
     ctx.clearRect(0, 0, width, height);
 
     const cx = width * 0.5;
-    const cy = state.player.y || height - 42;
+    const cy = height - 42;
     ctx.strokeStyle = "rgba(38, 56, 73, 0.34)";
     ctx.lineWidth = 1;
     [140, 260, 390, 520].forEach((radius) => {
@@ -1734,6 +1885,9 @@
       ctx.arc(s.x % width, s.y % height, s.r, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // In Training Lab, keep canvas background clean (no ship or falling words)
+    if (state.activeTab === "training") return;
 
     for (const sw of state.shockwaves) {
       ctx.save();
@@ -2019,7 +2173,7 @@
       .join("");
   }
 
-  // Event Listeners — Brand & Navigation Tabs (Always reset to clean Standby for selected Tab!)
+  // Event Listeners — Brand & Navigation Tabs
   brandLink.addEventListener("click", (e) => {
     e.preventDefault();
     navTabs.forEach((t) => t.classList.toggle("nav-active", t.dataset.tab === "arena"));
@@ -2058,14 +2212,20 @@
     });
   });
 
-  // Training Drills
+  // Training Drills (Lessons 01 - 04)
   document.querySelectorAll(".drill-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".drill-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.trainingDrill = btn.dataset.drill;
-      resetToStandby();
+      state.passageIndex = 0;
+      resetToStandby(false);
     });
+  });
+
+  // Next Passage Button in Training Lab
+  nextPassageBtn.addEventListener("click", () => {
+    resetToStandby(true);
   });
 
   // Keyboard Finger Guide Toggle
@@ -2179,15 +2339,30 @@
   });
 
   // Launch / Resume / Back to Control / Results Actions
-  launchBtn.addEventListener("click", () => startSession(true));
+  launchBtn.addEventListener("click", () => {
+    if (state.activeTab === "training") {
+      resetToStandby(state.phase === "standby");
+    } else {
+      startSession(true);
+    }
+  });
   letsFlyBtn.addEventListener("click", () => startSession(true));
-  retryBtn.addEventListener("click", () => startSession(true));
-  backToControlBtn.addEventListener("click", () => resetToStandby());
+  retryBtn.addEventListener("click", () => {
+    if (state.activeTab === "training") {
+      resetToStandby(true);
+    } else {
+      startSession(true);
+    }
+  });
+  backToControlBtn.addEventListener("click", () => resetToStandby(false));
 
   resumeBtn.addEventListener("click", () => {
     if (state.phase === "paused") {
       state.phase = "playing";
-      arenaStatus.textContent = "SECTOR 01 / ENGAGED";
+      arenaStatus.textContent =
+        state.activeTab === "training"
+          ? "ACADEMY // LESSON ACTIVE"
+          : "SECTOR 01 / ENGAGED";
       pauseOverlay.classList.add("hidden");
     }
   });
@@ -2196,7 +2371,7 @@
     endSession();
   });
 
-  // Jump directly from Post-Game Assessment into Adaptive Weak-Key Clinic!
+  // Jump directly from Post-Game Assessment into Adaptive Weak-Key Paragraph Clinic!
   trainWeakBtn.addEventListener("click", () => {
     navTabs.forEach((t) =>
       t.classList.toggle("nav-active", t.dataset.tab === "training")
@@ -2206,8 +2381,7 @@
       b.classList.toggle("active", b.dataset.drill === "weakkeys")
     );
     state.trainingDrill = "weakkeys";
-    resetToStandby();
-    startSession(false);
+    resetToStandby(false);
   });
 
   // Copy Challenge Link from Post-Game Results
@@ -2233,6 +2407,51 @@
     if (statsDialog.open) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
 
+    // Pause handling across all modes
+    if (state.phase === "paused") {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
+        state.phase = "playing";
+        arenaStatus.textContent =
+          state.activeTab === "training"
+            ? "ACADEMY // LESSON ACTIVE"
+            : "SECTOR 01 / ENGAGED";
+        pauseOverlay.classList.add("hidden");
+      }
+      return;
+    }
+
+    if (e.key === "Escape" && state.phase === "playing") {
+      e.preventDefault();
+      state.phase = "paused";
+      arenaStatus.textContent = "FLIGHT / PAUSED";
+      pauseOverlay.classList.remove("hidden");
+      return;
+    }
+
+    // TRAINING LAB: Structured Paragraph Typing Mode
+    if (state.activeTab === "training") {
+      if (state.phase === "results") {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          resetToStandby(true);
+        }
+        return;
+      }
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        handleTrainingParagraphKey("Backspace");
+        return;
+      }
+      if (e.key === " " || /^[a-zA-Z]$/.test(e.key)) {
+        e.preventDefault();
+        const ch = e.key === " " ? " " : e.key.toLowerCase();
+        handleTrainingParagraphKey(ch);
+      }
+      return;
+    }
+
+    // ARENA & SQUADRON: Orbital Shooter Modes
     if (state.phase === "standby" || state.phase === "results") {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -2241,30 +2460,12 @@
       return;
     }
 
-    if (state.phase === "paused") {
-      if (e.key === "Escape" || e.key === "Enter") {
-        e.preventDefault();
-        state.phase = "playing";
-        arenaStatus.textContent = "SECTOR 01 / ENGAGED";
-        pauseOverlay.classList.add("hidden");
-      }
-      return;
-    }
-
     if (state.phase === "playing") {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        state.phase = "paused";
-        arenaStatus.textContent = "FLIGHT / PAUSED";
-        pauseOverlay.classList.remove("hidden");
-        return;
-      }
       if (e.key === "Backspace") {
         e.preventDefault();
         state.lockedEnemyId = null;
         window.soundEngine.playSwitch();
         updateTypedReadout();
-        updateKeyboardHighlight();
         return;
       }
       if (e.key === "Tab") {
@@ -2275,7 +2476,6 @@
           state.lockedEnemyId = sorted[(idx + 1) % sorted.length].id;
           window.soundEngine.playSwitch();
           updateTypedReadout();
-          updateKeyboardHighlight();
         }
         return;
       }
