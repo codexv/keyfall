@@ -1634,11 +1634,11 @@
       const isLocked = locked && locked.id === e.id;
       ctx.save();
 
-      // Measure word in Orbitron font
+      // Measure word in Orbitron font (ALL-CAPS)
       const fontSize = e.type === "boss" ? 15 : isLocked ? 14 : 13;
       ctx.font = `700 ${fontSize}px 'Orbitron', sans-serif`;
 
-      const wordStr = e.word;
+      const wordStr = e.word.toUpperCase();
       const doneStr = wordStr.slice(0, e.typedIndex);
       const nextStr = wordStr.slice(e.typedIndex, e.typedIndex + 1);
       const restStr = wordStr.slice(e.typedIndex + 1);
