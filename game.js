@@ -92,7 +92,10 @@
   const resEyebrow = document.getElementById("resEyebrow");
   const resHeadline = document.getElementById("resHeadline");
   const resNetWpm = document.getElementById("resNetWpm");
+  const resGradeLetter = document.getElementById("resGradeLetter");
   const resRankPill = document.getElementById("resRankPill");
+  const resGradeNext = document.getElementById("resGradeNext");
+  const headerGradePill = document.getElementById("headerGradePill");
   const resRawSub = document.getElementById("resRawSub");
   const resAcc = document.getElementById("resAcc");
   const resWords = document.getElementById("resWords");
@@ -144,6 +147,51 @@
 
   const profile = loadProfile();
   pilotCallsignDisplay.textContent = profile.callsign;
+
+  // Pilot Grading & Ranking System (S+, S, A, B, C)
+  function computePilotRank(wpm, acc = 100) {
+    const effective = Math.round(wpm * (acc / 100));
+    if (effective >= 88) {
+      return {
+        grade: "S+",
+        title: "CYBERNETIC OVERLORD",
+        nextText: "MAX TIER ACHIEVED (TOP 1%)",
+      };
+    }
+    if (effective >= 70) {
+      return {
+        grade: "S",
+        title: "HYPERDRIVE ACE",
+        nextText: `Next Tier: S+ (${88 - effective} eff. WPM away)`,
+      };
+    }
+    if (effective >= 54) {
+      return {
+        grade: "A",
+        title: "VANGUARD COMMANDER",
+        nextText: `Next Tier: S (${70 - effective} eff. WPM away)`,
+      };
+    }
+    if (effective >= 38) {
+      return {
+        grade: "B",
+        title: "INTERCEPTOR PILOT",
+        nextText: `Next Tier: A (${54 - effective} eff. WPM away)`,
+      };
+    }
+    return {
+      grade: "C",
+      title: "ORBITAL CADET",
+      nextText: `Next Tier: B (${Math.max(1, 38 - effective)} eff. WPM away)`,
+    };
+  }
+
+  function updateHeaderGradeBadge() {
+    if (!headerGradePill) return;
+    const rankInfo = computePilotRank(profile.highestEverWpm || 0, 100);
+    headerGradePill.textContent = `RANK ${rankInfo.grade}`;
+  }
+  updateHeaderGradeBadge();
 
   // Finger Map Metadata for On-Screen Keyboard Tutorial
   const KEYBOARD_LAYOUT = [
@@ -1198,16 +1246,12 @@
       profile.highestEverWpm = netWpm;
     }
     saveProfile();
+    updateHeaderGradeBadge();
 
-    const rank =
-      netWpm >= 85
-        ? "ACE OVERLORD"
-        : netWpm >= 65
-        ? "SQUADRON ACE"
-        : netWpm >= 45
-        ? "VANGUARD PILOT"
-        : "ORBITAL CADET";
-    resRankPill.textContent = rank;
+    const rankObj = computePilotRank(netWpm, acc);
+    if (resGradeLetter) resGradeLetter.textContent = rankObj.grade;
+    resRankPill.textContent = rankObj.title;
+    if (resGradeNext) resGradeNext.textContent = rankObj.nextText;
 
     if (state.activeTab === "training") {
       const meta = DRILL_INFO[state.trainingDrill] || DRILL_INFO.homerow;
@@ -1935,15 +1979,16 @@
   function renderStatsDialog() {
     const lifetimeGrid = document.getElementById("lifetimeStatsGrid");
     const recordsList = document.getElementById("recordsList");
+    const topRank = computePilotRank(profile.highestEverWpm || 0, 100);
 
     lifetimeGrid.innerHTML = `
       <div class="life-card">
-        <span>PEAK WPM</span>
-        <strong>${profile.highestEverWpm} WPM</strong>
+        <span>PILOT GRADE</span>
+        <strong>${topRank.grade} · ${topRank.title.split(" ")[0]}</strong>
       </div>
       <div class="life-card">
-        <span>SESSIONS FLOWN</span>
-        <strong>${profile.lifetimeSessions}</strong>
+        <span>PEAK WPM</span>
+        <strong>${profile.highestEverWpm} WPM</strong>
       </div>
       <div class="life-card">
         <span>WORDS CLEARED</span>
@@ -1961,14 +2006,16 @@
     ];
 
     recordsList.innerHTML = labels
-      .map(
-        ([key, title]) => `
+      .map(([key, title]) => {
+        const w = profile.bestWpm[key] || 0;
+        const r = computePilotRank(w, 100);
+        return `
         <div class="record-row">
           <span>${title}</span>
-          <strong>${profile.bestWpm[key] || 0} WPM</strong>
+          <strong>${w} WPM &nbsp;·&nbsp; GRADE ${r.grade}</strong>
         </div>
-      `
-      )
+      `;
+      })
       .join("");
   }
 

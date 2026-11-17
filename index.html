@@ -31,6 +31,7 @@
       <button class="pilot-tag" id="editCallsignBtn" title="Click to change your Pilot Callsign">
         <span class="dot-online"></span>
         <span id="pilotCallsignDisplay">PILOT-01</span>
+        <span class="header-grade-pill" id="headerGradePill">C</span>
       </button>
       <button class="sound-btn" id="soundToggleBtn" type="button">
         <span class="sound-icon">♫</span> <span id="soundLabel">SOUND ON</span>
@@ -380,10 +381,19 @@
             <div class="overlay-eyebrow" id="resEyebrow">FLIGHT COMPLETE / WPM ASSESSMENT</div>
             <h3 id="resHeadline">Your journey starts here.</h3>
 
-            <div class="hero-wpm-block">
-              <div class="result-number" id="resNetWpm">0</div>
-              <div class="result-unit">WORDS PER MINUTE <span id="resRankPill" class="rank-pill">PILOT</span></div>
-              <div class="result-raw" id="resRawSub">Raw Speed: 0 WPM · Peak Burst: 0 WPM</div>
+            <div class="hero-wpm-row">
+              <div class="hero-wpm-block">
+                <div class="result-number" id="resNetWpm">0</div>
+                <div class="result-unit">WORDS PER MINUTE</div>
+                <div class="result-raw" id="resRawSub">Raw Speed: 0 WPM · Peak Burst: 0 WPM</div>
+              </div>
+
+              <div class="grade-badge-card">
+                <span class="grade-eyebrow">PILOT GRADE</span>
+                <div class="grade-letter" id="resGradeLetter">C</div>
+                <span class="grade-title" id="resRankPill">ORBITAL CADET</span>
+                <span class="grade-next" id="resGradeNext">Next Tier: B (38+ WPM)</span>
+              </div>
             </div>
 
             <div class="result-metrics">
