@@ -8,9 +8,9 @@
   --text: #e7edf3;
   --lime: #c7ff6a;
   --lime-hover: #ddffac;
-  --cyan: #5ce1e6;
-  --amber: #ffbe0b;
-  --danger: #ff4d6d;
+  --cyan: #8aa8c7;
+  --amber: #d9a74a;
+  --danger: #d96b52;
   --font: 'Orbitron', sans-serif;
   --mono: 'Space Mono', monospace;
 }
@@ -867,9 +867,9 @@ kbd {
   display: inline-block;
   margin-right: 2px;
 }
-.f-dot.pinky { background: #ff6b8b; }
-.f-dot.ring { background: #ffbe0b; }
-.f-dot.middle { background: #5ce1e6; }
+.f-dot.pinky { background: #b87b6c; }
+.f-dot.ring { background: #d9a74a; }
+.f-dot.middle { background: #8aa8c7; }
 .f-dot.index { background: #c7ff6a; }
 
 .kb-rows {
@@ -909,17 +909,17 @@ kbd {
   background: var(--muted);
 }
 
-.kb-key.finger-pinky { border-bottom: 2px solid rgba(255, 107, 139, 0.45); }
-.kb-key.finger-ring { border-bottom: 2px solid rgba(255, 190, 11, 0.45); }
-.kb-key.finger-middle { border-bottom: 2px solid rgba(92, 225, 230, 0.45); }
-.kb-key.finger-index { border-bottom: 2px solid rgba(199, 255, 106, 0.45); }
+.kb-key.finger-pinky { border-bottom: 2px solid rgba(184, 123, 108, 0.5); }
+.kb-key.finger-ring { border-bottom: 2px solid rgba(217, 167, 74, 0.5); }
+.kb-key.finger-middle { border-bottom: 2px solid rgba(138, 168, 199, 0.5); }
+.kb-key.finger-index { border-bottom: 2px solid rgba(199, 255, 106, 0.5); }
 
 .kb-key.target-next {
   background: var(--lime);
   color: #091006;
   border-color: var(--lime);
-  box-shadow: 0 0 14px rgba(199, 255, 106, 0.75);
-  transform: translateY(-2px);
+  box-shadow: 0 0 8px rgba(199, 255, 106, 0.35);
+  transform: translateY(-1px);
 }
 
 .kb-key.weak-spot {

@@ -568,12 +568,29 @@
 
     let type = options.type || "standard";
     if (!options.type && state.activeTab !== "training") {
+      const hasBoss = state.enemies.some((e) => e.type === "boss");
       const r = Math.random();
-      if (r < 0.16 && state.wordsCleared >= 4) type = "cruiser"; // splits into 2 shards
-      else if (r < 0.38) type = "scout";
+      if (!hasBoss && state.wordsCleared > 0 && state.wordsCleared % 10 === 0) {
+        type = "boss"; // Multi-word Dreadnought flagship
+      } else if (r < 0.18 && state.wordsCleared >= 3) {
+        type = "cruiser"; // Heavy hull that splits into 2 shards
+      } else if (r < 0.42) {
+        type = "scout"; // Fast sleek dart
+      }
     }
 
-    const word = (options.word || selectWordForSpawn()).toLowerCase();
+    let bossChain = null;
+    let word = options.word;
+    if (type === "boss" && !word) {
+      const chains = window.WORD_BANKS.bossChains;
+      const chosen = chains[Math.floor(Math.random() * chains.length)].slice();
+      word = chosen.shift();
+      bossChain = chosen;
+    } else {
+      word = word || selectWordForSpawn();
+    }
+    word = word.toLowerCase();
+
     const padX = 95;
     const x =
       options.x !== undefined
@@ -584,12 +601,13 @@
     let speed = 38 * diffMult * paceBoost;
     if (type === "scout" || type === "shard") speed *= 1.28;
     if (type === "cruiser") speed *= 0.76;
-    if (type === "jammer") speed *= 1.35;
+    if (type === "boss") speed *= 0.52;
+    if (type === "jammer") speed *= 1.32;
     if (state.activeTab === "training") speed *= 0.72; // calmer pace for training focus
 
     const enemy = {
       id: state.nextEntityId++,
-      type, // 'standard' | 'scout' | 'cruiser' | 'shard' | 'jammer'
+      type, // 'standard' | 'scout' | 'cruiser' | 'shard' | 'boss' | 'jammer'
       word,
       typedIndex: 0,
       x,
@@ -597,7 +615,10 @@
       vx: options.vx || 0,
       speed,
       hitFlash: 0,
-      isJammer: type === "jammer",
+      bossChain,
+      bossPhaseTotal: bossChain ? bossChain.length + 1 : 1,
+      bossPhaseCurrent: 1,
+       isJammer: type === "jammer",
       sender: options.sender || null,
     };
 
@@ -776,8 +797,18 @@
       });
 
       if (isComplete) {
-        state.lockedEnemyId = null;
-        completeEnemyWord(locked, false);
+        if (locked.type === "boss" && locked.bossChain && locked.bossChain.length > 0) {
+          locked.word = locked.bossChain.shift().toLowerCase();
+          locked.typedIndex = 0;
+          locked.bossPhaseCurrent++;
+          state.wordsCleared++;
+          spawnParticles(locked.x, locked.y, "#d9a74a", 16);
+          window.soundEngine.playWaveClear();
+          addFloatingText(locked.x, locked.y - 22, "SHIELD PHASE BROKEN", "#d9a74a");
+        } else {
+          state.lockedEnemyId = null;
+          completeEnemyWord(locked, false);
+        }
       }
 
       updateTypedReadout();
@@ -818,12 +849,20 @@
 
     // Particle burst
     const burstColor = byWingman
-      ? "#5ce1e6"
-      : enemy.isJammer
-      ? "#ff4d6d"
+      ? "#8aa8c7"
+      : enemy.isJammer || enemy.type === "boss"
+      ? "#d96b52"
+      : enemy.type === "cruiser"
+      ? "#d9a74a"
       : "#c7ff6a";
     spawnParticles(enemy.x, enemy.y, burstColor, 18);
-    window.soundEngine.playExplosion(enemy.type === "cruiser" ? "large" : "small");
+    window.soundEngine.playExplosion(
+      enemy.type === "boss"
+        ? "boss"
+        : enemy.type === "cruiser"
+        ? "large"
+        : "small"
+    );
 
     // Cruiser splits into 2 shards
     if (enemy.type === "cruiser") {
@@ -1550,10 +1589,10 @@
       ctx.restore();
     }
 
-    // 7. Bottom Glowing Lime Player Fighter Chevron (+ Cyan Wingman in 2P Co-op)
+    // 7. Bottom Lime Player Fighter Chevron (+ Steel-Blue Wingman in 2P Co-op)
     drawChevronShip(state.player.x, state.player.y, state.player.angle, "#c7ff6a", state.player.recoil);
     if (state.wingman.active) {
-      drawChevronShip(state.wingman.x, state.wingman.y, state.wingman.angle, "#5ce1e6", state.wingman.recoil);
+      drawChevronShip(state.wingman.x, state.wingman.y, state.wingman.angle, "#8aa8c7", state.wingman.recoil);
     }
   }
 
@@ -1563,10 +1602,10 @@
     ctx.rotate(angle + Math.PI / 2);
 
     ctx.shadowColor = color;
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = 8;
     ctx.strokeStyle = color;
-    ctx.fillStyle = "rgba(199, 255, 106, 0.08)";
-    ctx.lineWidth = 2;
+    ctx.fillStyle = "rgba(16, 24, 32, 0.85)";
+    ctx.lineWidth = 1.8;
 
     const k = recoil;
     ctx.beginPath();
@@ -1596,7 +1635,7 @@
       ctx.save();
 
       // Measure word in Orbitron font
-      const fontSize = isLocked ? 14 : 13;
+      const fontSize = e.type === "boss" ? 15 : isLocked ? 14 : 13;
       ctx.font = `700 ${fontSize}px 'Orbitron', sans-serif`;
 
       const wordStr = e.word;
@@ -1620,43 +1659,102 @@
           (b) =>
             boxX < b.x + b.w + 6 &&
             boxX + boxW + 6 > b.x &&
-            boxY < b.y + b.h + 18 &&
-            boxY + boxH + 18 > b.y
+            boxY < b.y + b.h + 24 &&
+            boxY + boxH + 24 > b.y
         );
         if (!hit) break;
-        boxY = hit.y + hit.h + 18;
+        boxY = hit.y + hit.h + 24;
       }
       placedBoxes.push({ x: boxX, y: boxY, w: boxW, h: boxH });
 
-      const diamondX = boxX + boxW / 2;
-      const diamondY = boxY - 12;
+      const shipX = boxX + boxW / 2;
+      const shipY = boxY - 14;
 
-      // 1. Hollow Diamond Target Marker above Word Pill (matches reference screenshot!)
+      // 1. Tactical Vector Ship Silhouette + Hollow Diamond Reticle above Word Pill
       ctx.save();
-      ctx.translate(diamondX, diamondY);
-      ctx.rotate(Math.PI / 4);
-      ctx.strokeStyle = isLocked
+      ctx.translate(shipX, shipY);
+
+      const strokeCol = isLocked
         ? "#c7ff6a"
-        : e.isJammer
-        ? "#ff4d6d"
+        : e.isJammer || e.type === "boss"
+        ? "#d96b52"
         : e.type === "cruiser"
-        ? "#ffbe0b"
-        : "#446078";
-      ctx.lineWidth = isLocked ? 1.8 : 1.2;
-      const dSize = e.type === "cruiser" ? 11 : 9;
-      ctx.strokeRect(-dSize / 2, -dSize / 2, dSize, dSize);
+        ? "#d9a74a"
+        : "#556c82";
+      ctx.strokeStyle = strokeCol;
+      ctx.fillStyle = "rgba(11, 18, 26, 0.9)";
+      ctx.lineWidth = isLocked ? 1.7 : 1.25;
+
+      if (e.type === "boss") {
+        // Dreadnought Octagonal Flagship + Phase Pips
+        ctx.beginPath();
+        ctx.moveTo(0, 10);
+        ctx.lineTo(14, 3);
+        ctx.lineTo(16, -6);
+        ctx.lineTo(7, -12);
+        ctx.lineTo(-7, -12);
+        ctx.lineTo(-16, -6);
+        ctx.lineTo(-14, 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        const pipsLeft = (e.bossPhaseTotal || 3) - (e.bossPhaseCurrent || 1) + 1;
+        for (let p = 0; p < (e.bossPhaseTotal || 3); p++) {
+          ctx.fillStyle = p < pipsLeft ? "#d96b52" : "#253342";
+          ctx.fillRect(-13 + p * 10, -18, 7, 3);
+        }
+      } else if (e.type === "cruiser") {
+        // Heavy Hexagonal Splitter Hull + Inner Diamond
+        ctx.beginPath();
+        for (let a = 0; a < 6; a++) {
+          const ang = (a * Math.PI) / 3 + Math.PI / 6;
+          const px = Math.cos(ang) * 10;
+          const py = Math.sin(ang) * 10;
+          if (a === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.rotate(Math.PI / 4);
+        ctx.strokeRect(-3.5, -3.5, 7, 7);
+      } else if (e.type === "scout" || e.type === "shard") {
+        // Sleek Dart Scout
+        ctx.beginPath();
+        ctx.moveTo(0, 8);
+        ctx.lineTo(8, -6);
+        ctx.lineTo(0, -3);
+        ctx.lineTo(-8, -6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        // Signature Hollow Diamond Target Marker with subtle wing ticks
+        ctx.beginPath();
+        ctx.moveTo(-12, 0);
+        ctx.lineTo(-7, 0);
+        ctx.moveTo(7, 0);
+        ctx.lineTo(12, 0);
+        ctx.stroke();
+
+        ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-4.5, -4.5, 9, 9);
+        ctx.strokeRect(-4.5, -4.5, 9, 9);
+      }
       ctx.restore();
 
       // 2. Dark Rectangular Tactical Word Pill
-      ctx.fillStyle = isLocked ? "rgba(18, 29, 24, 0.96)" : "rgba(12, 20, 30, 0.92)";
+      ctx.fillStyle = isLocked ? "rgba(18, 28, 23, 0.96)" : "rgba(11, 18, 27, 0.92)";
       ctx.strokeStyle = isLocked
         ? "#c7ff6a"
-        : e.isJammer
-        ? "rgba(255, 77, 109, 0.65)"
+        : e.isJammer || e.type === "boss"
+        ? "rgba(217, 107, 82, 0.65)"
         : e.type === "cruiser"
-        ? "rgba(255, 190, 11, 0.55)"
+        ? "rgba(217, 167, 74, 0.55)"
         : "rgba(38, 56, 73, 0.85)";
-      ctx.lineWidth = isLocked ? 1.6 : 1;
+      ctx.lineWidth = isLocked ? 1.5 : 1;
 
       ctx.beginPath();
       ctx.rect(boxX, boxY, boxW, boxH);
