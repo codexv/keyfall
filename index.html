@@ -3,245 +3,490 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KEYFALL // Tactical Orbital Typing Shooter & WPM Assessment</title>
+  <title>KEYFALL — Tactical Typing Arena, Training Lab &amp; Squadron Duels</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- PeerJS for Zero-Backend Real-Time P2P Duels & Co-op -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" defer></script>
 </head>
 <body>
-  <div id="app">
-    <!-- Background & Gameplay Canvas -->
-    <canvas id="game-canvas"></canvas>
+  <!-- Top Header -->
+  <header class="site-header">
+    <a href="#" class="brand" id="brandLink">
+      <span class="brand-icon">⌘</span>
+      <span class="brand-name">KEYFALL</span>
+      <span class="beta-pill">ARENA 02</span>
+    </a>
 
-    <!-- Top Tactical HUD -->
-    <header id="hud" class="hidden">
-      <div class="hud-group">
-        <div class="hud-stat">
-          <span class="hud-label" id="hud-mode-label">WAVE</span>
-          <span class="hud-value accent-cyan" id="hud-wave">01</span>
+    <nav class="site-nav" aria-label="Primary Navigation">
+      <button class="nav-tab nav-active" data-tab="arena">THE ARENA</button>
+      <button class="nav-tab" data-tab="training">TRAINING LAB</button>
+      <button class="nav-tab" data-tab="social">SQUADRON &amp; DUELS <span class="nav-badge" id="navPeerBadge">P2P</span></button>
+      <button class="nav-tab" id="openStatsBtn" type="button">YOUR STATS ↗</button>
+    </nav>
+
+    <div class="header-right">
+      <button class="pilot-tag" id="editCallsignBtn" title="Click to change your Pilot Callsign">
+        <span class="dot-online"></span>
+        <span id="pilotCallsignDisplay">PILOT-01</span>
+      </button>
+      <button class="sound-btn" id="soundToggleBtn" type="button">
+        <span class="sound-icon">♫</span> <span id="soundLabel">SOUND ON</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    <!-- Hero / Intro Row -->
+    <section class="intro">
+      <div class="intro-left">
+        <div class="eyebrow">
+          <span class="lime-dot"></span>
+          <span id="heroEyebrow">THE KEYBOARD IS YOUR WEAPON</span>
         </div>
-        <div class="hud-stat">
-          <span class="hud-label">NET WPM</span>
-          <span class="hud-value accent-gold" id="hud-wpm">0</span>
-        </div>
-        <div class="hud-stat">
-          <span class="hud-label">ACCURACY</span>
-          <span class="hud-value" id="hud-acc">100%</span>
-        </div>
-        <div class="hud-stat">
-          <span class="hud-label">COMBO</span>
-          <span class="hud-value accent-magenta" id="hud-combo">0x</span>
-        </div>
-        <div class="hud-stat">
-          <span class="hud-label">SCORE</span>
-          <span class="hud-value" id="hud-score">0</span>
-        </div>
+        <h1 id="heroTitle">Stay sharp.<br />Type <span class="lime-text">faster.</span></h1>
+        <p class="subtitle" id="heroSubtitle">Words incoming. Instincts on. Find your flow.</p>
       </div>
 
-      <div class="hud-center">
-        <div class="shield-box">
-          <span class="hud-label">HULL SHIELDS</span>
-          <div class="shield-pips" id="hud-shields">
-            <span class="pip active"></span>
-            <span class="pip active"></span>
-            <span class="pip active"></span>
+      <div class="intro-side">
+        <div class="sys-code" id="sysProtocolLabel">SYS / TYPING PROTOCOL 002</div>
+        <p class="sys-quote" id="sysQuote">A little pressure.<br />A lot of progress.</p>
+        <div class="sys-ready">
+          <span class="lime-dot"></span>
+          <span id="sysStatusText">ALL SYSTEMS READY</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Primary 2-Column Workspace -->
+    <div class="workspace">
+      <!-- Left Sidebar: Mission Control / Training Lab / Squadron Deck -->
+      <aside class="setup" id="missionControl">
+        <!-- TAB 1: SOLO ARENA DECK -->
+        <div class="sidebar-deck" id="deck-arena">
+          <div class="panel-label">
+            <span>01 &nbsp;MISSION CONTROL</span>
+            <span class="lime-arrow">↗</span>
+          </div>
+          <h2>Choose your flight.</h2>
+
+          <div class="modes" role="radiogroup" aria-label="Solo Modes">
+            <button class="mode-btn active" data-mode="assessment" type="button">
+              <span class="mode-icon">◴</span>
+              <div class="mode-copy">
+                <strong>WPM Assessment</strong>
+                <span>60 seconds. Find your baseline.</span>
+              </div>
+              <span class="mode-arrow">↗</span>
+            </button>
+
+            <button class="mode-btn" data-mode="survival" type="button">
+              <span class="mode-icon">❖</span>
+              <div class="mode-copy">
+                <strong>Endless Survival</strong>
+                <span>Keep your shields. Chase a record.</span>
+              </div>
+              <span class="mode-arrow">↗</span>
+            </button>
+          </div>
+
+          <div class="control-block">
+            <div class="block-label">DIFFICULTY</div>
+            <div class="segmented" id="soloDiffGroup">
+              <button class="seg-btn" data-diff="cadet" type="button">CADET</button>
+              <button class="seg-btn active" data-diff="pilot" type="button">PILOT</button>
+              <button class="seg-btn" data-diff="ace" type="button">ACE</button>
+            </div>
+          </div>
+
+          <div class="mission-info">
+            <div class="info-row">
+              <span>SESSION</span>
+              <strong id="infoSession">60 seconds</strong>
+            </div>
+            <div class="info-row">
+              <span>WORD POOL</span>
+              <strong id="infoPool">Everyday English</strong>
+            </div>
+            <div class="info-row">
+              <span>OBJECTIVE</span>
+              <strong id="infoObjective">Measure your speed</strong>
+            </div>
           </div>
         </div>
-        <div class="emp-box" id="emp-trigger-btn" title="Press SPACE or ENTER to detonate EMP">
-          <span class="hud-label">EMP SHOCKWAVE <kbd>SPACE</kbd></span>
-          <div class="emp-pips" id="hud-emp">
-            <span class="emp-pip active"></span>
-            <span class="emp-pip"></span>
-            <span class="emp-pip"></span>
+
+        <!-- TAB 2: TRAINING LAB DECK -->
+        <div class="sidebar-deck hidden" id="deck-training">
+          <div class="panel-label">
+            <span>02 &nbsp;TRAINING ACADEMY</span>
+            <span class="lime-arrow">↗</span>
+          </div>
+          <h2>Master every key.</h2>
+
+          <div class="modes" role="radiogroup" aria-label="Training Modules">
+            <button class="drill-btn active" data-drill="homerow" type="button">
+              <span class="mode-icon">⌨</span>
+              <div class="mode-copy">
+                <strong>01 · Home Row Foundation</strong>
+                <span>ASDF JKL; finger anchoring &amp; rhythm.</span>
+              </div>
+              <span class="mode-arrow">↗</span>
+            </button>
+
+            <button class="drill-btn" data-drill="topbottom" type="button">
+              <span class="mode-icon">⇕</span>
+              <div class="mode-copy">
+                <strong>02 · Full Reach &amp; Verticals</strong>
+                <span>Top &amp; bottom row reach precision.</span>
+              </div>
+              <span class="mode-arrow">↗</span>
+            </button>
+
+            <button class="drill-btn" data-drill="burst" type="button">
+              <span class="mode-icon">⚡</span>
+              <div class="mode-copy">
+                <strong>03 · High-Velocity Alternation</strong>
+                <span>Left/right hand alternation &amp; bigrams.</span>
+              </div>
+              <span class="mode-arrow">↗</span>
+            </button>
+
+            <button class="drill-btn" data-drill="weakkeys" type="button">
+              <span class="mode-icon">◎</span>
+              <div class="mode-copy">
+                <strong>04 · Adaptive Weak-Key Clinic</strong>
+                <span id="weakKeyDrillSub">Targets your personal missed keys.</span>
+              </div>
+              <span class="mode-arrow">↗</span>
+            </button>
+          </div>
+
+          <div class="control-block">
+            <div class="block-label">VISUAL KEYBOARD GUIDE</div>
+            <div class="segmented" id="guideToggleGroup">
+              <button class="seg-btn active" data-guide="on" type="button">FINGER MAP ON</button>
+              <button class="seg-btn" data-guide="off" type="button">MINIMAL</button>
+            </div>
+          </div>
+
+          <div class="mission-info">
+            <div class="info-row">
+              <span>FOCUS KEYS</span>
+              <strong id="infoDrillKeys" class="lime-text">A S D F J K L</strong>
+            </div>
+            <div class="info-row">
+              <span>COACHING</span>
+              <strong id="infoDrillCoach">Finger-zone prompts</strong>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="hud-controls">
-        <div class="target-hint">
-          <span><kbd>BKSP</kbd> UNLOCK</span>
-          <span><kbd>TAB</kbd> SWITCH</span>
+        <!-- TAB 3: SQUADRON & DUELS DECK -->
+        <div class="sidebar-deck hidden" id="deck-social">
+          <div class="panel-label">
+            <span>03 &nbsp;SQUADRON COMMAND</span>
+            <span class="lime-arrow">↗</span>
+          </div>
+          <h2>Fly with friends.</h2>
+
+          <div class="modes" role="radiogroup" aria-label="Multiplayer Modes">
+            <button class="social-mode-btn active" data-social="duel" type="button">
+              <span class="mode-icon">⚔</span>
+              <div class="mode-copy">
+                <strong>1v1 Typing Duel</strong>
+                <span>Cleared words launch jammer drones at rival.</span>
+              </div>
+              <span class="mode-arrow">↗</span>
+            </button>
+
+            <button class="social-mode-btn" data-social="coop" type="button">
+              <span class="mode-icon">🛡</span>
+              <div class="mode-copy">
+                <strong>2P Co-op Orbital Defense</strong>
+                <span>Shared shields &amp; dual-ship boss takedowns.</span>
+              </div>
+              <span class="mode-arrow">↗</span>
+            </button>
+          </div>
+
+          <div class="control-block">
+            <div class="block-label">CONNECTION / PARTNER</div>
+            <div class="segmented" id="partnerTypeGroup">
+              <button class="seg-btn active" data-partner="p2p" type="button">LIVE P2P ROOM</button>
+              <button class="seg-btn" data-partner="bot" type="button">AI SIMULATOR</button>
+            </div>
+          </div>
+
+          <!-- P2P Room Controls -->
+          <div class="p2p-box" id="p2pRoomBox">
+            <div class="p2p-row">
+              <button class="mini-action-btn" id="createRoomBtn" type="button">HOST ROOM</button>
+              <button class="mini-action-btn" id="copyInviteBtn" type="button" title="Copy direct invite link">COPY LINK ↗</button>
+            </div>
+            <div class="p2p-join-row">
+              <input type="text" id="joinRoomInput" class="room-input" placeholder="ENTER CODE (e.g. KF-4821)" maxlength="10" />
+              <button class="mini-action-btn accent" id="joinRoomBtn" type="button">JOIN</button>
+            </div>
+            <div class="p2p-status" id="p2pStatusLine">Standby — Host a room or enter a friend's code.</div>
+          </div>
+
+          <!-- Friend / Squadron Roster -->
+          <div class="squad-roster">
+            <div class="roster-header">
+              <span>SQUADRON ROSTER</span>
+              <button class="text-link-btn" id="addFriendBtn" type="button">+ ADD FRIEND</button>
+            </div>
+            <div class="roster-list" id="squadRosterList">
+              <!-- Populated by JS -->
+            </div>
+          </div>
         </div>
-        <button id="btn-finish-assess" class="hud-btn hud-btn-assess" title="End run now and view WPM Assessment">
-          ASSESS WPM
-        </button>
-        <button id="btn-mute" class="hud-btn" title="Toggle Audio">
-          SFX: ON
-        </button>
-      </div>
-    </header>
 
-    <!--Locked Target Bottom Status Bar -->
-    <div id="target-bar" class="hidden">
-      <div class="target-readout">
-        <span class="target-tag">LOCKED TARGET //</span>
-        <span id="locked-word-display">NO TARGET LOCKED — TYPE ANY INITIAL LETTER</span>
-      </div>
+        <!-- Shared Launch CTA -->
+        <button class="launch" id="launchBtn" type="button">
+          <span id="launchBtnText">LAUNCH SESSION</span>
+          <span>↗</span>
+        </button>
+        <div class="shortcut">
+          PRESS <kbd>ENTER</kbd> TO LAUNCH · <kbd>SPACE</kbd> EMP BLAST
+        </div>
+
+        <div class="tip" id="sidebarTip">
+          <span class="tip-icon">⌁</span>
+          <div>
+            <strong>Precision before speed.</strong>
+            <span id="sidebarTipText">Clean keystrokes build bigger combos and charge your EMP shockwave.</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Main Panel: Live Simulation Arena -->
+      <section class="arena" id="arena">
+        <canvas id="space"></canvas>
+
+        <!-- Arena Top Status Strip -->
+        <div class="arena-top">
+          <div class="sim-tag">
+            <span class="lime-dot"></span>
+            <span id="simModeTitle">LIVE SIMULATION</span>
+          </div>
+          <div class="sector-status" id="arenaStatus">SECTOR 01 / STANDBY</div>
+        </div>
+
+        <!-- 4-Column HUD -->
+        <div class="hud">
+          <div class="hud-cell">
+            <span class="hud-label">WPM</span>
+            <div class="hud-val lime-text" id="hudWpm">00</div>
+          </div>
+          <div class="hud-cell">
+            <span class="hud-label">ACCURACY</span>
+            <div class="hud-val"><span id="hudAcc">100</span><small>%</small></div>
+          </div>
+          <div class="hud-cell">
+            <span class="hud-label">COMBO</span>
+            <div class="hud-val"><span id="hudCombo">0</span><small>×</small></div>
+          </div>
+          <div class="hud-cell">
+            <span class="hud-label" id="hudTimeLabel">TIME LEFT</span>
+            <div class="hud-val"><span id="hudTime">60</span><small>s</small></div>
+          </div>
+        </div>
+
+        <!-- Multiplayer Live Telemetry Strip (Visible in 1v1 Duel & 2P Co-op) -->
+        <div class="mp-telemetry hidden" id="mpTelemetryBar">
+          <div class="mp-pilot">
+            <span class="mp-dot self"></span>
+            <strong id="mpSelfName">YOU</strong>
+            <span class="mp-metric" id="mpSelfStats">0 WPM · 100%</span>
+          </div>
+          <div class="mp-versus" id="mpModeBadge">1V1 DUEL</div>
+          <div class="mp-pilot opponent">
+            <span class="mp-metric" id="mpPeerStats">0 WPM · 100%</span>
+            <strong id="mpPeerName">RIVAL</strong>
+            <span class="mp-dot peer"></span>
+          </div>
+        </div>
+
+        <!-- Center Standby Welcome Overlay -->
+        <div class="welcome" id="welcomeOverlay">
+          <div class="reticle-box">
+            <div class="reticle-inner">⌖</div>
+          </div>
+          <div class="welcome-eyebrow" id="welcomeEyebrow">FOCUS. TYPE. OBLITERATE.</div>
+          <h2 id="welcomeTitle">Enter your flow state.</h2>
+          <p id="welcomeDesc">
+            Type the incoming words to clear the sky.<br />
+            Every keystroke brings you closer to your best.
+          </p>
+          <button class="lets-fly-btn" id="letsFlyBtn" type="button">
+            LET’S FLY <span>↗</span>
+          </button>
+        </div>
+
+        <!-- Interactive Visual Keyboard & Finger Guide Dock (Active in Training Lab or toggleable) -->
+        <div class="keyboard-dock hidden" id="keyboardDock">
+          <div class="kb-coach-bar">
+            <span class="kb-coach-tag" id="kbCoachPrompt">NEXT KEY: AWAITING TARGET</span>
+            <span class="kb-finger-legend">
+              <i class="f-dot pinky"></i>Pinky
+              <i class="f-dot ring"></i>Ring
+              <i class="f-dot middle"></i>Middle
+              <i class="f-dot index"></i>Index
+            </span>
+          </div>
+          <div class="kb-rows" id="kbRows">
+            <!-- Rendered dynamically by game.js -->
+          </div>
+        </div>
+
+        <!-- Bottom Targeting Zone -->
+        <div class="input-zone">
+          <div class="lock-label" id="lockLabel">TARGETING SYSTEM</div>
+          <div class="typed-readout" id="typedReadout">AWAITING INPUT<span class="cursor">_</span></div>
+        </div>
+
+        <!-- Bottom Status Bar -->
+        <div class="arena-bottom">
+          <div class="shields-status" id="shieldsDisplay">
+            <span class="shield-diamonds" id="shieldDiamonds">◆ ◆ ◆</span>
+            <span id="shieldText">SHIELDS ONLINE</span>
+            <span class="emp-badge" id="empBadge" title="Press SPACE to detonate EMP">⚡ EMP ×2</span>
+          </div>
+          <div class="key-hints">
+            <kbd>ESC</kbd> PAUSE &nbsp;/&nbsp; <kbd>TAB</kbd> SWITCH &nbsp;/&nbsp; <kbd>⌫</kbd> UNLOCK
+          </div>
+        </div>
+
+        <!-- Pause Overlay -->
+        <div class="overlay hidden" id="pauseOverlay">
+          <div class="overlay-card">
+            <div class="overlay-eyebrow">FLIGHT / PAUSED</div>
+            <h3>Flight paused.</h3>
+            <p class="overlay-sub">Your progress and telemetry are safe.</p>
+            <div class="overlay-actions">
+              <button class="launch" id="resumeBtn" type="button">RESUME SESSION ↗</button>
+              <button class="ghost-btn" id="quitToResultsBtn" type="button">END &amp; VIEW WPM ASSESSMENT</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Post-Game WPM Assessment Overlay -->
+        <div class="overlay results hidden" id="resultsOverlay">
+          <div class="results-inner">
+            <div class="overlay-eyebrow" id="resEyebrow">FLIGHT COMPLETE / WPM ASSESSMENT</div>
+            <h3 id="resHeadline">Your journey starts here.</h3>
+
+            <div class="hero-wpm-block">
+              <div class="result-number" id="resNetWpm">0</div>
+              <div class="result-unit">WORDS PER MINUTE <span id="resRankPill" class="rank-pill">PILOT</span></div>
+              <div class="result-raw" id="resRawSub">Raw Speed: 0 WPM · Peak Burst: 0 WPM</div>
+            </div>
+
+            <div class="result-metrics">
+              <div class="res-metric">
+                <strong id="resAcc">100%</strong>
+                <span>Accuracy</span>
+              </div>
+              <div class="res-metric">
+                <strong id="resWords">0</strong>
+                <span>Words cleared</span>
+              </div>
+              <div class="res-metric">
+                <strong id="resCombo">0×</strong>
+                <span>Best combo</span>
+              </div>
+              <div class="res-metric">
+                <strong id="resTime">0s</strong>
+                <span>Active time</span>
+              </div>
+            </div>
+
+            <!-- Compact WPM Timeline Chart & Weak-Key Diagnostics inside Arena Results -->
+            <div class="res-telemetry-grid">
+              <div class="res-chart-box">
+                <div class="res-box-title">WPM CADENCE TIMELINE</div>
+                <canvas id="wpmChart" width="320" height="90"></canvas>
+              </div>
+              <div class="res-weak-box">
+                <div class="res-box-title">WEAK-KEY TELEMETRY</div>
+                <div class="res-weak-list" id="resWeakKeys">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <p class="coaching-note" id="resCoaching">
+              Keep your eyes on the words and use a light, steady rhythm. Short daily sessions help build consistency.
+            </p>
+            <p class="formula-note">
+              WPM = correct keystrokes ÷ 5 ÷ active minutes · Includes Weak-Key Telemetry
+            </p>
+
+            <div class="overlay-actions">
+              <button class="launch" id="retryBtn" type="button">FLY AGAIN ↗</button>
+              <button class="ghost-btn" id="trainWeakBtn" type="button">TRAIN WEAK KEYS ↗</button>
+              <button class="ghost-btn" id="shareChallengeBtn" type="button">CHALLENGE FRIEND ↗</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
 
-    <!-- Start / Mode Selection Overlay -->
-    <section id="start-screen" class="overlay-screen">
-      <div class="panel start-panel">
-        <div class="brand-header">
-          <div class="badge-pill">ORBITAL DEFENSE &amp; TELEMETRY SYSTEM</div>
-          <h1 class="game-title">KEY<span>FALL</span></h1>
-          <p class="game-subtitle">NEXT-GEN TACTICAL TYPING SHOOTER &amp; WPM DIAGNOSTIC</p>
+    <!-- Bottom 3-Column Feature Strip -->
+    <section class="bottom-strip">
+      <div class="strip-item">
+        <div class="strip-icon">↗</div>
+        <div class="strip-copy">
+          <strong>Built for your breakthrough</strong>
+          <p>Progressive drills, finger-zone mapping, and adaptive weak-key clinics that target your exact bottlenecks.</p>
         </div>
-
-        <div class="section-label">SELECT MISSION PROTOCOL</div>
-        <div class="mode-grid">
-          <button class="mode-card selected" data-mode="survival">
-            <div class="mode-tag">ENDLESS ESCALATION</div>
-            <div class="mode-name">WAVE SURVIVAL</div>
-            <p class="mode-desc">Classic Z-Type escalation upgraded with Splitter Cruisers, Dreadnought Bosses, and full post-mission WPM Assessment.</p>
-          </button>
-          <button class="mode-card" data-mode="timed60">
-            <div class="mode-tag">60-SECOND BENCHMARK</div>
-            <div class="mode-name">60S WPM BLITZ</div>
-            <p class="mode-desc">Adaptive 60-second combat sprint. Continuous dynamic waves scale to your real-time WPM for a pure speed &amp; accuracy test.</p>
-          </button>
-          <button class="mode-card" data-mode="timed120">
-            <div class="mode-tag">120-SECOND BENCHMARK</div>
-            <div class="mode-name">120S ENDURANCE</div>
-            <p class="mode-desc">Sustained 2-minute orbital defense benchmark measuring stamina, consistency, and weak-key telemetry under pressure.</p>
-          </button>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">◎</div>
+        <div class="strip-copy">
+          <strong>Real performance insights</strong>
+          <p>Every session tracks Net WPM, Raw cadence, 5-second burst peaks, and per-character misfire heatmaps.</p>
         </div>
-
-        <div class="difficulty-row">
-          <span class="section-label">THREAT VELOCITY:</span>
-          <div class="diff-buttons">
-            <button class="diff-btn" data-diff="cadet">CADET (0.8x)</button>
-            <button class="diff-btn active" data-diff="vanguard">VANGUARD (1.0x)</button>
-            <button class="diff-btn" data-diff="overdrive">OVERDRIVE (1.35x)</button>
-          </div>
-        </div>
-
-        <div class="intel-grid">
-          <div class="intel-item">
-            <span class="intel-title accent-cyan">SCOUT &amp; INTERCEPTOR</span>
-            <span class="intel-text">3–7 letter strike craft. Fast approach vectors.</span>
-          </div>
-          <div class="intel-item">
-            <span class="intel-title accent-gold">SPLITTER CRUISER</span>
-            <span class="intel-text">8–10 letter heavy hull. Splits into 2 fast shards on destruction.</span>
-          </div>
-          <div class="intel-item">
-            <span class="intel-title accent-magenta">DREADNOUGHT BOSS</span>
-            <span class="intel-text">Multi-word phase shields &amp; seeker missiles.</span>
-          </div>
-          <div class="intel-item">
-            <span class="intel-title accent-green">TACTICAL UPGRADES</span>
-            <span class="intel-text"><kbd>BKSP</kbd> unlock word · <kbd>TAB</kbd> cycle target · <kbd>SPACE</kbd> EMP</span>
-          </div>
-        </div>
-
-        <div class="action-row">
-          <button id="btn-launch" class="primary-btn">
-            LAUNCH INTERCEPTOR <span class="btn-sub">[PRESS ENTER]</span>
-          </button>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">⌁</div>
+        <div class="strip-copy">
+          <strong>Squadron Duels &amp; Co-op</strong>
+          <p>Challenge colleagues in real-time 1v1 typing duels or defend the sector together in 2-player co-op missions.</p>
         </div>
       </div>
     </section>
 
-    <!-- Post-Game WPM Assessment Screen -->
-    <section id="assessment-screen" class="overlay-screen hidden">
-      <div class="panel assessment-panel">
-        <div class="assess-header">
-          <div>
-            <div class="badge-pill" id="assess-status-pill">MISSION TELEMETRY REPORT</div>
-            <h2 class="assess-title">WPM ASSESSMENT</h2>
-            <p class="assess-sub" id="assess-summary-line">WAVE SURVIVAL // VANGUARD PROTOCOL</p>
-          </div>
-          <div class="rank-box">
-            <span class="rank-label">PILOT RATING</span>
-            <div class="rank-grade" id="assess-rank">S</div>
-            <span class="rank-title" id="assess-rank-title">HYPERDRIVE ACE</span>
-          </div>
-        </div>
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div>KEYFALL / MAKE EVERY KEY COUNT.</div>
+      <div class="footer-mid">ZERO DOWNLOADS. SOLO, TRAINING &amp; P2P MULTIPLAYER.</div>
+      <div>V.2.0 ↗</div>
+    </footer>
+  </main>
 
-        <!-- Primary WPM Metrics -->
-        <div class="kpi-grid">
-          <div class="kpi-card primary-kpi">
-            <span class="kpi-label">NET WPM (ACCURACY-ADJUSTED)</span>
-            <div class="kpi-value accent-gold" id="stat-net-wpm">0</div>
-            <span class="kpi-sub" id="stat-wpm-percentile">Active Combat Cadence</span>
-          </div>
-          <div class="kpi-card">
-            <span class="kpi-label">RAW WPM</span>
-            <div class="kpi-value accent-cyan" id="stat-raw-wpm">0</div>
-            <span class="kpi-sub" id="stat-cpm">0 CPM</span>
-          </div>
-          <div class="kpi-card">
-            <span class="kpi-label">ACCURACY</span>
-            <div class="kpi-value accent-green" id="stat-accuracy">100%</div>
-            <span class="kpi-sub" id="stat-keystrokes">0 / 0 Keystrokes</span>
-          </div>
-          <div class="kpi-card">
-            <span class="kpi-label">PEAK BURST WPM</span>
-            <div class="kpi-value accent-magenta" id="stat-peak-wpm">0</div>
-            <span class="kpi-sub" id="stat-max-combo">0x Max Streak</span>
-          </div>
-        </div>
-
-        <!-- WPM Over Time Chart + Telemetry Breakdown -->
-        <div class="telemetry-split">
-          <div class="chart-card">
-            <div class="card-header">
-              <span>WPM CADENCE &amp; ACCURACY TIMELINE</span>
-              <div class="chart-legend">
-                <span class="legend-dot gold"></span> NET WPM
-                <span class="legend-dot cyan"></span> RAW WPM
-                <span class="legend-dot red"></span> MISFIRE
-              </div>
-            </div>
-            <div class="chart-wrap">
-              <canvas id="wpm-chart" width="540" height="190"></canvas>
-            </div>
-          </div>
-
-          <div class="diagnostics-card">
-            <div class="card-header">
-              <span>WEAK-KEY DIAGNOSTICS &amp; COMBAT STATS</span>
-            </div>
-            <div class="weak-keys-section">
-              <div class="sub-label">MOST MISSED KEYS</div>
-              <div id="weak-keys-list" class="weak-keys-list">
-                <!-- Populated dynamically -->
-              </div>
-            </div>
-            <div class="combat-mini-grid">
-              <div class="mini-stat">
-                <span class="mini-label">HOSTILES DESTROYED</span>
-                <span class="mini-val" id="stat-kills">0</span>
-              </div>
-              <div class="mini-stat">
-                <span class="mini-label">WAVE / TIME</span>
-                <span class="mini-val" id="stat-duration">00:00</span>
-              </div>
-              <div class="mini-stat">
-                <span class="mini-label">FASTEST WORD</span>
-                <span class="mini-val accent-cyan" id="stat-fastest-word">—</span>
-              </div>
-              <div class="mini-stat">
-                <span class="mini-label">FINAL SCORE</span>
-                <span class="mini-val accent-gold" id="stat-final-score">0</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="action-row assess-actions">
-          <button id="btn-retry" class="primary-btn">
-            DEPLOY AGAIN <span class="btn-sub">[PRESS ENTER]</span>
-          </button>
-          <button id="btn-menu" class="secondary-btn">
-            MISSION SELECT
-          </button>
-        </div>
+  <!-- Flight Record / Stats Modal (<dialog>) -->
+  <dialog id="statsDialog" class="stats-dialog">
+    <div class="dialog-head">
+      <div>
+        <div class="panel-label">YOUR FLIGHT RECORD</div>
+        <h3>Personal bests &amp; telemetry.</h3>
       </div>
-    </section>
-  </div>
+      <button class="close-dialog-btn" id="closeStatsBtn" type="button">×</button>
+    </div>
+    <div class="dialog-body">
+      <div class="lifetime-grid" id="lifetimeStatsGrid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="records-list" id="recordsList">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </dialog>
 
   <script src="words.js"></script>
   <script src="audio.js"></script>
